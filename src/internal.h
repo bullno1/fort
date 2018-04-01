@@ -3,13 +3,16 @@
 
 #include <fort.h>
 
-typedef struct fort_interpreter_state_s fort_interpreter_state_t;
+typedef struct fort_state_s fort_state_t;
+typedef struct fort_word_s fort_word_t;
 
-struct fort_interpreter_state_s
+struct fort_state_s
 {
 	struct bk_file_s* input;
 	fort_location_t location;
 	char last_char;
+
+	unsigned interpreting: 1;
 };
 
 struct fort_s
@@ -19,9 +22,15 @@ struct fort_s
 	BK_ARRAY(fort_cell_t) param_stack_values;
 	BK_ARRAY(char) scan_buf;
 
-	fort_interpreter_state_t interpreter_state;
-
-	unsigned interpreting: 1;
+	fort_state_t state;
 };
+
+struct fort_word_s
+{
+	struct fort_word_s* previous;
+};
+
+fort_word_t*
+fort_find_internal(fort_t* fort, fort_string_ref_t name);
 
 #endif

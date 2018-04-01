@@ -17,10 +17,12 @@
 
 #ifndef FORT_REAL_TYPE
 #define FORT_REAL_TYPE double
+#define FORT_STR_TO_REAL strtod
 #endif
 
 #ifndef FORT_INT_TYPE
 #define FORT_INT_TYPE int64_t
+#define FORT_STR_TO_INT strtoll
 #endif
 
 struct bk_allocator_s;
@@ -32,12 +34,12 @@ typedef union fort_cell_u fort_cell_t;
 typedef struct fort_string_ref_s fort_string_ref_t;
 typedef struct fort_s fort_t;
 typedef struct fort_config_s fort_config_t;
-typedef struct fort_word_s fort_word_t;
 typedef struct fort_location_s fort_location_t;
 typedef struct fort_loc_range_s fort_loc_range_t;
 typedef struct fort_token_s fort_token_t;
 
 #define FORT_CELL_TYPE(X) \
+	X(FORT_NULL) \
 	X(FORT_INTEGER) \
 	X(FORT_REAL) \
 	X(FORT_STRING) \
@@ -81,7 +83,7 @@ struct fort_loc_range_s
 struct fort_string_ref_s
 {
 	const char* ptr;
-	size_t length;
+	fort_int_t length;
 };
 
 struct fort_token_s
@@ -96,17 +98,14 @@ struct fort_config_s
 	struct bk_file_s* output;
 };
 
-struct fort_word_s
-{
-	fort_word_t* previous;
-	uint64_t name;
-};
-
 FORT_DECL fort_err_t
 fort_create(fort_config_t* config, fort_t** fortp);
 
 FORT_DECL void
 fort_destroy(fort_t* fort);
+
+FORT_DECL void
+fort_reset(fort_t* fort);
 
 /** @defgroup stack
  *  @{
@@ -119,7 +118,7 @@ FORT_DECL fort_err_t
 fort_push_real(fort_t* fort, fort_real_t value);
 
 FORT_DECL fort_err_t
-fort_push_string(fort_t* fort, fort_int_t length, uint8_t* buff);
+fort_push_string(fort_t* fort, fort_string_ref_t string);
 
 FORT_DECL fort_err_t
 fort_pop(fort_t* fort, fort_cell_type_t* type, fort_cell_t* value);
@@ -128,6 +127,9 @@ FORT_DECL fort_err_t
 fort_peek(
 	fort_t* fort, fort_int_t index, fort_cell_type_t* type, fort_cell_t* value
 );
+
+FORT_DECL fort_int_t
+fort_stack_size(fort_t* fort);
 
 /** @} */
 
@@ -150,20 +152,8 @@ fort_next_char(fort_t* fort, char* ch);
 FORT_DECL fort_err_t
 fort_interpret(fort_t* fort, struct bk_file_s* in);
 
-FORT_DECL int
+FORT_DECL fort_int_t
 fort_is_interpreting(fort_t* fort);
-
-/** @} */
-
-/** @defgroup words
- *  @{
- */
-
-FORT_DECL fort_err_t
-fort_execute(fort_t* fort);
-
-FORT_DECL fort_err_t
-fort_find(fort_t* fort);
 
 /** @} */
 

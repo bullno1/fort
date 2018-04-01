@@ -9,9 +9,9 @@ fort_next_char(fort_t* fort, char* ch)
 {
 	size_t len = 1;
 	char current_char;
-	fort_interpreter_state_t* interpreter_state = &fort->interpreter_state;
+	fort_state_t* state = &fort->state;
 
-	int err = bk_fread(interpreter_state->input, &current_char, &len);
+	int err = bk_fread(state->input, &current_char, &len);
 
 	if(len == 0)
 	{
@@ -27,21 +27,21 @@ fort_next_char(fort_t* fort, char* ch)
 	}
 	else
 	{
-		char last_char = interpreter_state->last_char;
-		int is_crlf = interpreter_state->last_char == '\r' && current_char == '\n';
+		char last_char = state->last_char;
+		int is_crlf = state->last_char == '\r' && current_char == '\n';
 		int is_newline = last_char == '\r' || last_char == '\n';
 
 		if(is_newline && !is_crlf)
 		{
-			interpreter_state->location.column = 1;
-			interpreter_state->location.line += 1;
+			state->location.column = 1;
+			state->location.line += 1;
 		}
 		else
 		{
-			interpreter_state->location.column += 1;
+			state->location.column += 1;
 		}
 
-		interpreter_state->last_char = current_char;
+		state->last_char = current_char;
 		*ch = current_char;
 		return FORT_OK;
 	}
@@ -67,8 +67,8 @@ fort_next_token(fort_t* fort, fort_token_t* token)
 		else
 		{
 			bk_array_push(fort->scan_buf, ch);
-			token_start = fort->interpreter_state.location;
-			token_end = fort->interpreter_state.location;
+			token_start = fort->state.location;
+			token_end = fort->state.location;
 			break;
 		}
 	}
@@ -93,7 +93,7 @@ fort_next_token(fort_t* fort, fort_token_t* token)
 		else
 		{
 			bk_array_push(fort->scan_buf, ch);
-			token_end = fort->interpreter_state.location;
+			token_end = fort->state.location;
 		}
 	}
 
@@ -107,6 +107,7 @@ fort_next_token(fort_t* fort, fort_token_t* token)
 			.end = token_end
 		}
 	};
+	bk_array_push(fort->scan_buf, '\0'); // NULL-terminate
 
 	return FORT_OK;
 }

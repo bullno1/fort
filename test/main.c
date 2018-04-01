@@ -3,7 +3,9 @@
 #include <munit/munit.h>
 
 #define TEST_SUITES(X) \
-	X(scan)
+	X(scan) \
+	X(interpret) \
+
 
 #define DECLARE_SUITE(S) extern MunitSuite S;
 

@@ -1,9 +1,4 @@
-#include <munit/munit.h>
-#include "test_helper.h"
-#include <fort.h>
-#include <bk/default_allocator.h>
-#include <bk/stdstream.h>
-#include <bk/fs/mem.h>
+#include "test_common.h"
 #include "../src/internal.h"
 
 #define MAKE_TOKEN(STR, START_LINE, START_COL, END_LINE, END_COL) \
@@ -61,8 +56,8 @@ next_token(const MunitParameter params[], void* fixture)
 
 	bk_mem_file_t mem_file;
 	bk_file_t* file = bk_mem_fs_wrap_fixed(&mem_file, input, strlen(input));
-	fort->interpreter_state.input = file;
-	fort->interpreter_state.location = (fort_location_t){
+	fort->state.input = file;
+	fort->state.location = (fort_location_t){
 		.line = 1, .column = 0
 	};
 

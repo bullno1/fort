@@ -6,9 +6,8 @@
 #include <bk/fs/mem.h>
 #include "../src/internal.h"
 
-#define MAKE_TOKEN(LEXEME, START_LINE, START_COL, END_LINE, END_COL) \
-	{ .lexeme = LEXEME \
-	, .length = sizeof(LEXEME) - 1 \
+#define MAKE_TOKEN(STR, START_LINE, START_COL, END_LINE, END_COL) \
+	{ .lexeme = { .ptr = STR, .length = sizeof(STR) - 1 } \
 	, .location = { .start = { .line = START_LINE, .column = START_COL }  \
 		          , .end = { .line = END_LINE, .column = END_COL } \
 	              } \
@@ -76,7 +75,8 @@ next_token(const MunitParameter params[], void* fixture)
 
 		munit_logf(MUNIT_LOG_INFO, "token #%zd", i);
 
-		munit_assert_size(expected_tokens[i].length, ==, token.length);
+		munit_assert_size(expected_tokens[i].lexeme.length, ==, token.lexeme.length);
+		munit_assert_memory_equal(token.lexeme.length, expected_tokens[i].lexeme.ptr, token.lexeme.ptr);
 		munit_assert_uint(expected_tokens[i].location.start.line, ==, token.location.start.line);
 		munit_assert_uint(expected_tokens[i].location.start.column, ==, token.location.start.column);
 		munit_assert_uint(expected_tokens[i].location.end.line, ==, token.location.end.line);

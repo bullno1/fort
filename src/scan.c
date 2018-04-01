@@ -97,10 +97,16 @@ fort_next_token(fort_t* fort, fort_token_t* token)
 		}
 	}
 
-	token->length = bk_array_len(fort->scan_buf);
-	token->lexeme = fort->scan_buf;
-	token->location.start = token_start;
-	token->location.end = token_end;
+	*token = (fort_token_t) {
+		.lexeme = {
+			.ptr = fort->scan_buf,
+			.length = bk_array_len(fort->scan_buf)
+		},
+		.location = {
+			.start = token_start,
+			.end = token_end
+		}
+	};
 
 	return FORT_OK;
 }

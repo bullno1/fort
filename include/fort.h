@@ -29,6 +29,7 @@ struct bk_file_s;
 typedef FORT_REAL_TYPE fort_real_t;
 typedef FORT_INT_TYPE fort_int_t;
 typedef union fort_cell_u fort_cell_t;
+typedef struct fort_string_ref_s fort_string_ref_t;
 typedef struct fort_s fort_t;
 typedef struct fort_config_s fort_config_t;
 typedef struct fort_word_s fort_word_t;
@@ -77,10 +78,15 @@ struct fort_loc_range_s
 	fort_location_t end;
 };
 
+struct fort_string_ref_s
+{
+	const char* ptr;
+	size_t length;
+};
+
 struct fort_token_s
 {
-	const char* lexeme;
-	size_t length;
+	fort_string_ref_t lexeme;
 	fort_loc_range_t location;
 };
 

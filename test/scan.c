@@ -10,7 +10,7 @@
 	{ .lexeme = LEXEME \
 	, .length = sizeof(LEXEME) - 1 \
 	, .location = { .start = { .line = START_LINE, .column = START_COL }  \
-		          , .end = { .line = START_COL, .column = END_COL } \
+		          , .end = { .line = END_LINE, .column = END_COL } \
 	              } \
 	}
 
@@ -45,7 +45,7 @@ next_token(const MunitParameter params[], void* fixture)
 
 	char input[] =
 		"(\n"
-		"  )\n"
+		"  )\r"
 		"50.6 \"hi hi \" \r\n"
 		"; wat";
 
@@ -57,21 +57,32 @@ next_token(const MunitParameter params[], void* fixture)
 		MAKE_TOKEN("hi", 3, 10, 3, 11),
 		MAKE_TOKEN("\"", 3, 13, 3, 13),
 		MAKE_TOKEN(";", 4, 1, 4, 1),
-		MAKE_TOKEN("wat", 4, 6, 4, 8),
+		MAKE_TOKEN("wat", 4, 3, 4, 5),
 	};
 
 	bk_mem_file_t mem_file;
 	bk_file_t* file = bk_mem_fs_wrap_fixed(&mem_file, input, strlen(input));
 	fort->interpreter_state.input = file;
+	fort->interpreter_state.location = (fort_location_t){
+		.line = 1, .column = 0
+	};
 
 	size_t num_tokens = BK_STATIC_ARRAY_LEN(expected_tokens);
+	fort_token_t token;
+
 	for(size_t i = 0; i < num_tokens; ++i)
 	{
-		fort_token_t token;
 		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_next_token(fort, &token));
 
+		munit_logf(MUNIT_LOG_INFO, "token #%zd", i);
+
 		munit_assert_size(expected_tokens[i].length, ==, token.length);
+		munit_assert_uint(expected_tokens[i].location.start.line, ==, token.location.start.line);
+		munit_assert_uint(expected_tokens[i].location.start.column, ==, token.location.start.column);
+		munit_assert_uint(expected_tokens[i].location.end.line, ==, token.location.end.line);
+		munit_assert_uint(expected_tokens[i].location.end.column, ==, token.location.end.column);
 	}
+	munit_assert_enum(fort_err_t, FORT_ERR_NOT_FOUND, ==, fort_next_token(fort, &token));
 
 	return MUNIT_OK;
 }

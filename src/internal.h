@@ -8,6 +8,8 @@ typedef struct fort_interpreter_state_s fort_interpreter_state_t;
 struct fort_interpreter_state_s
 {
 	struct bk_file_s* input;
+	fort_location_t location;
+	char last_char;
 };
 
 struct fort_s

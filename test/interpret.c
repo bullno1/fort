@@ -113,6 +113,8 @@ arithmetic(const MunitParameter params[], void* fixture_)
 	fixture_t* fixture = fixture_;
 
 	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "41 1 +");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42.0", "41 1.0 +");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42.0", "41.0 1 +");
 
 	return MUNIT_OK;
 }

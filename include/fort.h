@@ -33,6 +33,7 @@ typedef FORT_INT_TYPE fort_int_t;
 typedef union fort_cell_u fort_cell_t;
 typedef struct fort_string_ref_s fort_string_ref_t;
 typedef struct fort_s fort_t;
+typedef struct fort_word_s fort_word_t;
 typedef struct fort_config_s fort_config_t;
 typedef struct fort_location_s fort_location_t;
 typedef struct fort_loc_range_s fort_loc_range_t;
@@ -98,8 +99,10 @@ struct fort_config_s
 	struct bk_file_s* output;
 };
 
+typedef fort_err_t(*fort_native_fn_t)(fort_t* fort, const fort_word_t* word);
+
 FORT_DECL fort_err_t
-fort_create(fort_config_t* config, fort_t** fortp);
+fort_create(const fort_config_t* config, fort_t** fortp);
 
 FORT_DECL void
 fort_destroy(fort_t* fort);

@@ -5,6 +5,7 @@
 #define TEST_SUITES(X) \
 	X(scan) \
 	X(interpret) \
+	X(stack) \
 
 
 #define DECLARE_SUITE(S) extern MunitSuite S;

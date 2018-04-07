@@ -6,6 +6,13 @@ typedef struct
 	fort_t* fort2;
 } fixture_t;
 
+#define fort_assert_same_stack_effect(fort1, fort2, str1, str2) \
+	do { \
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_interpret_string(fort1, str1)); \
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_interpret_string(fort2, str2)); \
+		fort_assert_stack_equal(fort1, fort2); \
+	} while(0)
+
 static void*
 setup(const MunitParameter params[], void* userdata)
 {
@@ -99,10 +106,27 @@ number(const MunitParameter params[], void* fixture_)
 	return MUNIT_OK;
 }
 
+static MunitResult
+arithmetic(const MunitParameter params[], void* fixture_)
+{
+	(void)params;
+	fixture_t* fixture = fixture_;
+
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "41 1 +");
+
+	return MUNIT_OK;
+}
+
 static MunitTest tests[] = {
 	{
 		.name = "/number",
 		.test = number,
+		.setup = setup,
+		.tear_down = teardown
+	},
+	{
+		.name = "/arithmetic",
+		.test = arithmetic,
 		.setup = setup,
 		.tear_down = teardown
 	},

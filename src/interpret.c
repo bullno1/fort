@@ -33,7 +33,7 @@ fort_parse_number(
 static fort_err_t
 fort_interpret_token(fort_t* fort, const fort_token_t* token)
 {
-	fort_word_t* word = fort_find_internal(fort, token->lexeme);
+	const fort_word_t* word = fort_find_internal(fort, token->lexeme);
 	if(word == NULL)
 	{
 		fort_cell_type_t type;
@@ -49,7 +49,7 @@ fort_interpret_token(fort_t* fort, const fort_token_t* token)
 	}
 	else
 	{
-		return FORT_ERR_NOT_FOUND;
+		return word->code(fort, word);
 	}
 }
 

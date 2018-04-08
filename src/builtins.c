@@ -37,15 +37,12 @@ fort_numeric_2pop(
 	{
 		*type = FORT_INTEGER;
 	}
-	else if(lhs_t == FORT_INTEGER)
+	else
 	{
 		*type = FORT_REAL;
-		lhs->real = (fort_real_t)lhs->integer;
-	}
-	else if(rhs_t == FORT_INTEGER)
-	{
-		*type = FORT_REAL;
-		rhs->real = (fort_real_t)rhs->integer;
+
+		if(lhs_t == FORT_INTEGER) { lhs->real = (fort_real_t)lhs->integer; }
+		if(rhs_t == FORT_INTEGER) { rhs->real = (fort_real_t)rhs->integer; }
 	}
 
 	return FORT_OK;

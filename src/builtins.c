@@ -1,12 +1,14 @@
 #include "internal.h"
+#include <limits.h>
 #include <fort-utils.h>
 #include <bk/allocator.h>
+#include <bk/assert.h>
 
 static void
 fort_add_native_fn(fort_t* fort, fort_string_ref_t name, fort_native_fn_t fn)
 {
-	// TODO: assert/check string length against INT_MAX
 	fort_word_t* word = BK_NEW(fort->config.allocator, fort_word_t);
+	BK_ASSERT(name.length <= INT_MAX, "String too long");
 	word->name = strpool_inject(&fort->strpool, name.ptr, (int)name.length);
 	word->code = fn;
 

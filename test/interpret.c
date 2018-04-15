@@ -39,18 +39,17 @@ number(const MunitParameter params[], void* fixture_)
 {
 	(void)params;
 	fixture_t* fixture = fixture_;
-	fort_cell_type_t type;
 	fort_cell_t value;
 
 	fort_push_integer(fixture->fort1, 42);
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &type, &value));
-	munit_assert_enum(fort_cell_type_t, FORT_INTEGER, ==, type);
-	munit_assert_int64(42, ==, value.integer);
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &value));
+	munit_assert_enum(fort_cell_type_t, FORT_INTEGER, ==, value.type);
+	munit_assert_int64(42, ==, value.data.integer);
 
 	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_interpret_string(fixture->fort2, "42"));
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &type, &value));
-	munit_assert_enum(fort_cell_type_t, FORT_INTEGER, ==, type);
-	munit_assert_int64(42, ==, value.integer);
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &value));
+	munit_assert_enum(fort_cell_type_t, FORT_INTEGER, ==, value.type);
+	munit_assert_int64(42, ==, value.data.integer);
 
 	munit_assert_int64(1, ==, fort_stack_size(fixture->fort1));
 	munit_assert_int64(1, ==, fort_stack_size(fixture->fort2));

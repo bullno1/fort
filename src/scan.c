@@ -1,8 +1,38 @@
 #include "internal.h"
 #include <ctype.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include <bk/array.h>
 #include <bk/fs.h>
+
+fort_err_t
+fort_parse_number(fort_string_ref_t string, fort_cell_t* value)
+{
+	void* dot_ptr = memchr(string.ptr, '.', string.length);
+	char* end_ptr;
+
+	errno = 0;
+	if(dot_ptr == NULL)
+	{
+		fort_int_t num = FORT_STR_TO_INT(string.ptr, &end_ptr, 0);
+		*value = (fort_cell_t){
+			.type = FORT_INTEGER,
+			.data = { .integer = num }
+		};
+	}
+	else
+	{
+		fort_real_t num = FORT_STR_TO_REAL(string.ptr, &end_ptr);
+		*value = (fort_cell_t){
+			.type = FORT_REAL,
+			.data = { .real = num }
+		};
+	}
+
+	int convert_error = errno == ERANGE || end_ptr != string.ptr + string.length;
+	return convert_error ? FORT_ERR_TYPE : FORT_OK;
+}
 
 fort_err_t
 fort_next_char(fort_t* fort, char* ch)

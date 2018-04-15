@@ -6,7 +6,7 @@
 	X(scan) \
 	X(interpret) \
 	X(stack) \
-
+	X(compile)
 
 #define DECLARE_SUITE(S) extern MunitSuite S;
 

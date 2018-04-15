@@ -11,6 +11,7 @@ fort_unload_all(fort_t* fort)
 		bk_free(fort->config.allocator, itr);
 		itr = next;
 	}
+
 	fort->dict = NULL;
 }
 
@@ -21,16 +22,12 @@ fort_create(const fort_config_t* config, fort_t** fortp)
 
 	*fort = (fort_t){
 		.config = *config,
-		.param_stack_types = bk_array_create(config->allocator, uint8_t, 16),
-		.param_stack_values = bk_array_create(config->allocator, fort_cell_t, 16),
+		.param_stack = bk_array_create(config->allocator, fort_cell_t, 16),
+		.return_stack = bk_array_create(config->allocator, fort_stack_frame_t, 16),
 		.scan_buf = bk_array_create(config->allocator, char, 16)
 	};
 
-	strpool_config_t strpool_cfg = strpool_default_config;
-	strpool_cfg.memctx = config->allocator;
-	strpool_init(&fort->strpool, &strpool_cfg);
-
-	fort_load_builtins(fort);
+	fort_reset(fort);
 
 	*fortp = fort;
 	return FORT_OK;
@@ -42,21 +39,22 @@ fort_destroy(fort_t* fort)
 	fort_unload_all(fort);
 	strpool_term(&fort->strpool);
 	bk_array_destroy(fort->scan_buf);
-	bk_array_destroy(fort->param_stack_types);
-	bk_array_destroy(fort->param_stack_values);
+	bk_array_destroy(fort->return_stack);
+	bk_array_destroy(fort->param_stack);
 	bk_free(fort->config.allocator, fort);
 }
 
 void
 fort_reset(fort_t* fort)
 {
-	strpool_term(&fort->strpool);
+	if(fort->strpool.memctx != NULL) { strpool_term(&fort->strpool); }
 	strpool_config_t strpool_cfg = strpool_default_config;
 	strpool_cfg.memctx = fort->config.allocator;
+	strpool_cfg.ignore_case = 1;
 	strpool_init(&fort->strpool, &strpool_cfg);
 
-	bk_array_clear(fort->param_stack_types);
-	bk_array_clear(fort->param_stack_values);
+	bk_array_clear(fort->param_stack);
+	bk_array_clear(fort->return_stack);
 
 	fort_unload_all(fort);
 	fort_load_builtins(fort);

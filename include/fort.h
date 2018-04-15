@@ -30,7 +30,7 @@ struct bk_file_s;
 
 typedef FORT_REAL_TYPE fort_real_t;
 typedef FORT_INT_TYPE fort_int_t;
-typedef union fort_cell_u fort_cell_t;
+typedef struct fort_cell_s fort_cell_t;
 typedef struct fort_string_ref_s fort_string_ref_t;
 typedef struct fort_s fort_t;
 typedef struct fort_word_s fort_word_t;
@@ -62,11 +62,16 @@ BK_ENUM(fort_cell_type_t, FORT_CELL_TYPE)
 
 BK_ENUM(fort_err_t, FORT_ERR)
 
-union fort_cell_u
+struct fort_cell_s
 {
-	fort_int_t integer;
-	fort_real_t real;
-	void* ref;
+	fort_cell_type_t type;
+
+	union
+	{
+		fort_int_t integer;
+		fort_real_t real;
+		void* ref;
+	} data;
 };
 
 struct fort_location_s
@@ -124,12 +129,10 @@ FORT_DECL fort_err_t
 fort_push_string(fort_t* fort, fort_string_ref_t string);
 
 FORT_DECL fort_err_t
-fort_pop(fort_t* fort, fort_cell_type_t* type, fort_cell_t* value);
+fort_pop(fort_t* fort, fort_cell_t* value);
 
 FORT_DECL fort_err_t
-fort_peek(
-	fort_t* fort, fort_int_t index, fort_cell_type_t* type, fort_cell_t* value
-);
+fort_peek(fort_t* fort, fort_int_t index, fort_cell_t* value);
 
 FORT_DECL fort_int_t
 fort_stack_size(fort_t* fort);
@@ -153,7 +156,7 @@ fort_next_char(fort_t* fort, char* ch);
  */
 
 FORT_DECL fort_err_t
-fort_interpret(fort_t* fort, struct bk_file_s* in);
+fort_interpret(fort_t* fort, struct bk_file_s* in, const char* filename);
 
 FORT_DECL fort_int_t
 fort_is_interpreting(fort_t* fort);

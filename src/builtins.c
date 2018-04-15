@@ -22,29 +22,30 @@ fort_is_numeric(fort_cell_type_t type)
 	return type == FORT_REAL || type == FORT_INTEGER;
 }
 
-static fort_err_t
-fort_numeric_2pop(
-	fort_t* fort, fort_cell_type_t* type, fort_cell_t* lhs, fort_cell_t* rhs
-)
+static void
+fort_promote_int_to_real(fort_cell_t* cell)
 {
-	fort_cell_type_t lhs_t, rhs_t;
+	cell->type = FORT_REAL;
+	cell->data.real = (fort_real_t)cell->data.integer;
+}
+
+static fort_err_t
+fort_numeric_2pop(fort_t* fort, fort_cell_t* lhs, fort_cell_t* rhs)
+{
 	fort_err_t err;
 
-	if((err = fort_pop(fort, &rhs_t, rhs)) != FORT_OK) { return err; }
-	if((err = fort_pop(fort, &lhs_t, lhs)) != FORT_OK) { return err; }
+	if((err = fort_pop(fort, rhs)) != FORT_OK) { return err; }
+	if((err = fort_pop(fort, lhs)) != FORT_OK) { return err; }
 
-	if(!(fort_is_numeric(lhs_t) && fort_is_numeric(rhs_t))) { return FORT_ERR_TYPE; }
-
-	if(lhs_t == FORT_INTEGER && rhs_t == FORT_INTEGER)
+	if(!fort_is_numeric(lhs->type) || !fort_is_numeric(rhs->type))
 	{
-		*type = FORT_INTEGER;
+		return FORT_ERR_TYPE;
 	}
-	else
-	{
-		*type = FORT_REAL;
 
-		if(lhs_t == FORT_INTEGER) { lhs->real = (fort_real_t)lhs->integer; }
-		if(rhs_t == FORT_INTEGER) { rhs->real = (fort_real_t)rhs->integer; }
+	if(lhs->type != FORT_INTEGER || rhs->type != FORT_INTEGER)
+	{
+		if(lhs->type == FORT_INTEGER) { fort_promote_int_to_real(lhs); }
+		if(rhs->type == FORT_INTEGER) { fort_promote_int_to_real(rhs); }
 	}
 
 	return FORT_OK;
@@ -55,27 +56,42 @@ fort_add(fort_t* fort, const fort_word_t* word)
 {
 	(void)word;
 
-	fort_cell_type_t type;
 	fort_cell_t lhs, rhs;
 	fort_err_t err;
 
-	if((err = fort_numeric_2pop(fort, &type, &lhs, &rhs)) != FORT_OK)
+	if((err = fort_numeric_2pop(fort, &lhs, &rhs)) != FORT_OK)
 	{
 		return err;
 	}
 
-	if(type == FORT_REAL)
+	if(lhs.type == FORT_REAL)
 	{
-		return fort_push_real(fort, lhs.real + rhs.real);
+		return fort_push_real(fort, lhs.data.real + rhs.data.real);
 	}
 	else
 	{
-		return fort_push_integer(fort, lhs.integer + rhs.integer);
+		return fort_push_integer(fort, lhs.data.integer + rhs.data.integer);
 	}
+}
+
+static fort_err_t
+fort_colon(fort_t* fort, const fort_word_t* word)
+{
+	(void)word;
+	return fort_begin_compile(fort);
+}
+
+static fort_err_t
+fort_semicolon(fort_t* fort, const fort_word_t* word)
+{
+	(void)word;
+	return fort_end_compile(fort);
 }
 
 void
 fort_load_builtins(fort_t* fort)
 {
 	fort_add_native_fn(fort, FORT_STRING_REF("+"), &fort_add);
+	fort_add_native_fn(fort, FORT_STRING_REF(":"), &fort_colon);
+	fort_add_native_fn(fort, FORT_STRING_REF(";"), &fort_semicolon);
 }

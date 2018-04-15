@@ -9,13 +9,12 @@ fort_assert_stack_equal(fort_t* fort1, fort_t* fort2)
 
 	for(fort_int_t i = 0; i < stack_size1; ++i)
 	{
-		fort_cell_type_t type1, type2;
 		fort_cell_t value1, value2;
 
-		fort_peek(fort1, i, &type1, &value1);
-		fort_peek(fort2, i, &type2, &value2);
+		fort_peek(fort1, i, &value1);
+		fort_peek(fort2, i, &value2);
 
-		munit_assert_enum(fort_cell_type_t, type1, ==, type2);
+		munit_assert_enum(fort_cell_type_t, value1.type, ==, value2.type);
 		munit_assert_memory_equal(sizeof(fort_cell_t), &value1, &value2);
 	}
 }
@@ -26,5 +25,5 @@ fort_interpret_string(fort_t* fort, char* string)
 	bk_mem_file_t mem_file;
 	bk_file_t* file = bk_mem_fs_wrap_fixed(&mem_file, string, strlen(string));
 
-	return fort_interpret(fort, file);
+	return fort_interpret(fort, file, __FILE__);
 }

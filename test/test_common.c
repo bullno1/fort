@@ -18,12 +18,3 @@ fort_assert_stack_equal(fort_t* fort1, fort_t* fort2)
 		munit_assert_memory_equal(sizeof(fort_cell_t), &value1, &value2);
 	}
 }
-
-fort_err_t
-fort_interpret_string(fort_t* fort, char* string)
-{
-	bk_mem_file_t mem_file;
-	bk_file_t* file = bk_mem_fs_wrap_fixed(&mem_file, string, strlen(string));
-
-	return fort_interpret(fort, file, __FILE__);
-}

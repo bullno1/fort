@@ -1,11 +1,12 @@
 #include "internal.h"
 #include <bk/array.h>
-#include <errno.h>
+#include <bk/fs/mem.h>
+#include <fort-utils.h>
 
 static fort_err_t
 fort_interpret_token(fort_t* fort, const fort_token_t* token)
 {
-	const fort_word_t* word = fort_find_internal(fort, token->lexeme);
+	fort_word_t* word = fort_find_internal(fort, token->lexeme);
 	if(word == NULL)
 	{
 		fort_cell_t value;
@@ -17,7 +18,38 @@ fort_interpret_token(fort_t* fort, const fort_token_t* token)
 	}
 	else
 	{
+		FORT_ASSERT(!word->compile_only, FORT_ERR_COMPILE_ONLY);
+
 		return word->code(fort, word);
+	}
+}
+
+static fort_err_t
+fort_compile_token(fort_t* fort, const fort_token_t* token)
+{
+	fort_word_t* word = fort_find_internal(fort, token->lexeme);
+	if(word == NULL)
+	{
+		fort_cell_t value;
+
+		fort_err_t err = fort_parse_number(token->lexeme, &value);
+		FORT_ASSERT(err == FORT_OK, FORT_ERR_NOT_FOUND);
+
+		return fort_compile_internal(fort, value);
+	}
+	else
+	{
+		if(word->immediate)
+		{
+			return word->code(fort, word);
+		}
+		else
+		{
+			return fort_compile_internal(fort, (fort_cell_t){
+				.type = FORT_XT,
+				.data = { .ref = (fort_word_t*)word }
+			});
+		}
 	}
 }
 
@@ -40,23 +72,17 @@ fort_outer_interpret(fort_t* fort)
 
 		if(fort->state.interpreting)
 		{
-			if((err = fort_interpret_token(fort, &token)) != FORT_OK)
-			{
-				return err;
-			}
+			FORT_ENSURE(fort_interpret_token(fort, &token));
 		}
 		else
 		{
-			if((err = fort_compile_token(fort, &token)) != FORT_OK)
-			{
-				return err;
-			}
+			FORT_ENSURE(fort_compile_token(fort, &token));
 		}
 	}
 }
 
 fort_err_t
-fort_interpret(fort_t* fort, struct bk_file_s* in, const char* filename)
+fort_interpret(fort_t* fort, struct bk_file_s* in, fort_string_ref_t filename)
 {
 	(void)filename;
 	fort_state_t state = fort->state;
@@ -71,6 +97,14 @@ fort_interpret(fort_t* fort, struct bk_file_s* in, const char* filename)
 
 	fort->state = state;
 	return err;
+}
+
+fort_err_t
+fort_interpret_string(fort_t* fort, fort_string_ref_t str, fort_string_ref_t filename)
+{
+	bk_mem_file_t mem_file;
+	bk_file_t* file = bk_mem_fs_wrap_fixed(&mem_file, (char*)str.ptr, str.length);
+	return fort_interpret(fort, file, filename);
 }
 
 fort_int_t

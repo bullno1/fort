@@ -1,8 +1,8 @@
 #ifndef FORT_H
 #define FORT_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <inttypes.h>
 #include <bk/macro.h>
 
 #if FORT_DYNAMIC == 1
@@ -17,11 +17,13 @@
 
 #ifndef FORT_REAL_TYPE
 #define FORT_REAL_TYPE double
+#define FORT_REAL_FMT "%f"
 #define FORT_STR_TO_REAL strtod
 #endif
 
 #ifndef FORT_INT_TYPE
 #define FORT_INT_TYPE int64_t
+#define FORT_INT_FMT "%" PRId64
 #define FORT_STR_TO_INT strtoll
 #endif
 
@@ -45,6 +47,7 @@ typedef struct fort_token_s fort_token_t;
 	X(FORT_REAL) \
 	X(FORT_STRING) \
 	X(FORT_XT) \
+	X(FORT_TICK) \
 	X(FORT_OBJ)
 
 BK_ENUM(fort_cell_type_t, FORT_CELL_TYPE)
@@ -52,13 +55,15 @@ BK_ENUM(fort_cell_type_t, FORT_CELL_TYPE)
 #define FORT_ERR(X) \
 	X(FORT_OK) \
 	X(FORT_YIELD) \
+	X(FORT_SWITCH) \
 	X(FORT_ERR_UNDERFLOW) \
 	X(FORT_ERR_OVERFLOW) \
 	X(FORT_ERR_OOM) \
 	X(FORT_ERR_IO) \
 	X(FORT_ERR_TYPE) \
 	X(FORT_ERR_COMPILE_ONLY) \
-	X(FORT_ERR_NOT_FOUND)
+	X(FORT_ERR_NOT_FOUND) \
+	X(FORT_ERR_SYNTAX)
 
 BK_ENUM(fort_err_t, FORT_ERR)
 
@@ -104,7 +109,7 @@ struct fort_config_s
 	struct bk_file_s* output;
 };
 
-typedef fort_err_t(*fort_native_fn_t)(fort_t* fort, const fort_word_t* word);
+typedef fort_err_t(*fort_native_fn_t)(fort_t* fort, fort_word_t* word);
 
 FORT_DECL fort_err_t
 fort_create(const fort_config_t* config, fort_t** fortp);
@@ -114,6 +119,9 @@ fort_destroy(fort_t* fort);
 
 FORT_DECL void
 fort_reset(fort_t* fort);
+
+FORT_DECL fort_err_t
+fort_load_builtins(fort_t* fort);
 
 /** @defgroup stack
  *  @{
@@ -156,7 +164,10 @@ fort_next_char(fort_t* fort, char* ch);
  */
 
 FORT_DECL fort_err_t
-fort_interpret(fort_t* fort, struct bk_file_s* in, const char* filename);
+fort_interpret(fort_t* fort, struct bk_file_s* in, fort_string_ref_t filename);
+
+FORT_DECL fort_err_t
+fort_interpret_string(fort_t* fort, fort_string_ref_t str, fort_string_ref_t filename);
 
 FORT_DECL fort_int_t
 fort_is_interpreting(fort_t* fort);

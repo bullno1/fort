@@ -1,5 +1,6 @@
 #include "internal.h"
 #include <bk/array.h>
+#include <fort-utils.h>
 
 fort_err_t
 fort_push(fort_t* fort, fort_cell_t value)
@@ -30,7 +31,7 @@ fort_err_t
 fort_pop(fort_t* fort, fort_cell_t* value)
 {
 	fort_int_t stack_size = bk_array_len(fort->param_stack);
-	if(stack_size == 0) { return FORT_ERR_UNDERFLOW; }
+	FORT_ASSERT(stack_size > 0, FORT_ERR_UNDERFLOW);
 
 	--stack_size;
 
@@ -46,7 +47,7 @@ fort_peek(fort_t* fort, fort_int_t index, fort_cell_t* value)
 	fort_int_t stack_size = bk_array_len(fort->param_stack);
 	index = index >= 0 ? stack_size - index - 1 : -index - 1;
 
-	if(index < 0) { return FORT_ERR_UNDERFLOW; }
+	FORT_ASSERT(index >= 0, FORT_ERR_UNDERFLOW);
 
 	*value = fort->param_stack[index];
 

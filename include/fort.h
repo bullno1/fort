@@ -35,8 +35,10 @@ typedef FORT_INT_TYPE fort_int_t;
 typedef struct fort_cell_s fort_cell_t;
 typedef struct fort_string_ref_s fort_string_ref_t;
 typedef struct fort_s fort_t;
+typedef struct fort_ctx_s fort_ctx_t;
 typedef struct fort_word_s fort_word_t;
 typedef struct fort_config_s fort_config_t;
+typedef struct fort_ctx_config_s fort_ctx_config_t;
 typedef struct fort_location_s fort_location_t;
 typedef struct fort_loc_range_s fort_loc_range_t;
 typedef struct fort_token_s fort_token_t;
@@ -103,16 +105,33 @@ struct fort_token_s
 	fort_loc_range_t location;
 };
 
-struct fort_config_s
+struct fort_ctx_config_s
 {
 	struct bk_allocator_s* allocator;
+};
+
+struct fort_config_s
+{
 	struct bk_file_s* output;
 };
 
 typedef fort_err_t(*fort_native_fn_t)(fort_t* fort, fort_word_t* word);
 
+/** @defgroup main
+ *  @{
+ */
+
 FORT_DECL fort_err_t
-fort_create(const fort_config_t* config, fort_t** fortp);
+fort_create_ctx(const fort_ctx_config_t* config, fort_ctx_t** ctxp);
+
+FORT_DECL void
+fort_destroy_ctx(fort_ctx_t* ctx);
+
+FORT_DECL void
+fort_reset_ctx(fort_ctx_t* ctx);
+
+FORT_DECL fort_err_t
+fort_create(fort_ctx_t* ctx, const fort_config_t* config, fort_t** fortp);
 
 FORT_DECL void
 fort_destroy(fort_t* fort);
@@ -122,6 +141,11 @@ fort_reset(fort_t* fort);
 
 FORT_DECL fort_err_t
 fort_load_builtins(fort_t* fort);
+
+FORT_DECL fort_ctx_t*
+fort_ctx(fort_t* fort);
+
+/** @} */
 
 /** @defgroup stack
  *  @{

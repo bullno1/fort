@@ -54,6 +54,14 @@ fort_exec_colon(fort_t* fort, fort_word_t* word)
 	size_t return_stack_depth = bk_array_len(fort->return_stack);
 	if(return_stack_depth == 0)
 	{
+		if(fort->return_to_native == NULL)
+		{
+			fort->return_to_native = fort_find_internal(
+				fort->ctx, FORT_STRING_REF("return-to-native")
+			);
+			FORT_ASSERT(fort->return_to_native != NULL, FORT_ERR_NOT_FOUND);
+		}
+
 		FORT_ENSURE(fort_push_stack_frame(fort, fort->return_to_native));
 	}
 

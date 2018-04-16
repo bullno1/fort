@@ -31,11 +31,11 @@ fort_free_string(strpool_t* strpool, STRPOOL_U64 handle)
 }
 
 static void
-fort_destroy_word(fort_t* fort, fort_word_t* word)
+fort_destroy_word(fort_ctx_t* ctx, fort_word_t* word)
 {
 	if(word->data != NULL) { bk_array_destroy(word->data); }
-	fort_free_string(&fort->strpool, word->name);
-	bk_free(fort->config.allocator, word);
+	fort_free_string(&ctx->strpool, word->name);
+	bk_free(ctx->config.allocator, word);
 }
 
 fort_err_t
@@ -46,7 +46,7 @@ fort_compile_internal(fort_t* fort, fort_cell_t cell)
 
 	if(current_word->data == NULL)
 	{
-		current_word->data = bk_array_create(fort->config.allocator, fort_cell_t, 1);
+		current_word->data = bk_array_create(fort->ctx->config.allocator, fort_cell_t, 1);
 	}
 
 	bk_array_push(current_word->data, cell);
@@ -55,16 +55,16 @@ fort_compile_internal(fort_t* fort, fort_cell_t cell)
 }
 
 void
-fort_reset_dict(fort_t* fort)
+fort_reset_dict(fort_ctx_t* ctx)
 {
-	for(fort_word_t* itr = fort->dict; itr != NULL;)
+	for(fort_word_t* itr = ctx->dict; itr != NULL;)
 	{
 		fort_word_t* next = itr->previous;
-		fort_destroy_word(fort, itr);
+		fort_destroy_word(ctx, itr);
 		itr = next;
 	}
 
-	fort->dict = NULL;
+	ctx->dict = NULL;
 }
 
 fort_err_t
@@ -75,18 +75,18 @@ fort_begin_word(fort_t* fort, fort_string_ref_t name, fort_native_fn_t code)
 	fort_word_t* current_word = fort->current_word;
 	if(current_word != NULL)
 	{
-		fort_free_string(&fort->strpool, current_word->name);
+		fort_free_string(&fort->ctx->strpool, current_word->name);
 		bk_array_clear(current_word->data);
 	}
 	else
 	{
-		fort->current_word = current_word = BK_UNSAFE_NEW(fort->config.allocator, fort_word_t);
+		fort->current_word = current_word = BK_UNSAFE_NEW(fort->ctx->config.allocator, fort_word_t);
 		if(current_word == NULL) { return FORT_ERR_OOM; }
 
 		current_word->data = NULL;
 	}
 
-	current_word->name = fort_alloc_string(&fort->strpool, name);
+	current_word->name = fort_alloc_string(&fort->ctx->strpool, name);
 	current_word->code = code;
 	current_word->immediate = 0;
 	current_word->compile_only = 0;
@@ -97,22 +97,22 @@ fort_begin_word(fort_t* fort, fort_string_ref_t name, fort_native_fn_t code)
 fort_err_t
 fort_end_word(fort_t* fort)
 {
-	fort->current_word->previous = fort->dict;
-	fort->dict = fort->current_word;
+	fort->current_word->previous = fort->ctx->dict;
+	fort->ctx->dict = fort->current_word;
 	fort->current_word = NULL;
 
 	return FORT_OK;
 }
 
 fort_word_t*
-fort_find_internal(fort_t* fort, fort_string_ref_t name)
+fort_find_internal(fort_ctx_t* ctx, fort_string_ref_t name)
 {
-	for(fort_word_t* itr = fort->dict; itr != NULL; itr = itr->previous)
+	for(fort_word_t* itr = ctx->dict; itr != NULL; itr = itr->previous)
 	{
-		int cstr_len = strpool_length(&fort->strpool, itr->name);
+		int cstr_len = strpool_length(&ctx->strpool, itr->name);
 		if((fort_int_t)cstr_len != name.length) { continue; }
 
-		const char* cstr = strpool_cstr(&fort->strpool, itr->name);
+		const char* cstr = strpool_cstr(&ctx->strpool, itr->name);
 		if(FORT_STRNICMP(name.ptr, cstr, cstr_len) == 0)
 		{
 			return itr;

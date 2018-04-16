@@ -30,7 +30,20 @@
 		fort_assert_stack_equal(fort1, fort2); \
 	} while(0)
 
+typedef struct fixture_s
+{
+	fort_ctx_t* ctx;
+	fort_t* fort1;
+	fort_t* fort2;
+} fixture_t;
+
 void
 fort_assert_stack_equal(fort_t* fort1, fort_t* fort2);
+
+void*
+setup_fixture(const MunitParameter params[], void* userdata);
+
+void
+teardown_fixture(void* fixture);
 
 #endif

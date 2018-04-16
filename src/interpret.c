@@ -6,7 +6,7 @@
 static fort_err_t
 fort_interpret_token(fort_t* fort, const fort_token_t* token)
 {
-	fort_word_t* word = fort_find_internal(fort, token->lexeme);
+	fort_word_t* word = fort_find_internal(fort->ctx, token->lexeme);
 	if(word == NULL)
 	{
 		fort_cell_t value;
@@ -27,7 +27,7 @@ fort_interpret_token(fort_t* fort, const fort_token_t* token)
 static fort_err_t
 fort_compile_token(fort_t* fort, const fort_token_t* token)
 {
-	fort_word_t* word = fort_find_internal(fort, token->lexeme);
+	fort_word_t* word = fort_find_internal(fort->ctx, token->lexeme);
 	if(word == NULL)
 	{
 		fort_cell_t value;
@@ -47,7 +47,7 @@ fort_compile_token(fort_t* fort, const fort_token_t* token)
 		{
 			return fort_compile_internal(fort, (fort_cell_t){
 				.type = FORT_XT,
-				.data = { .ref = (fort_word_t*)word }
+				.data = { .ref = word }
 			});
 		}
 	}

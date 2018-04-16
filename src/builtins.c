@@ -82,7 +82,7 @@ fort_colon(fort_t* fort, fort_word_t* word)
 static fort_err_t
 fort_last_word(fort_t* fort, fort_word_t** wordp)
 {
-	*wordp = fort->current_word != NULL ? fort->current_word : fort->dict;
+	*wordp = fort->current_word != NULL ? fort->current_word : fort->ctx->dict;
 	return *wordp != NULL ? FORT_OK : FORT_ERR_NOT_FOUND;
 }
 
@@ -94,7 +94,7 @@ fort_print_word(fort_t* fort, struct bk_file_s* out, fort_word_t* word, int recu
 {
 	if(recurse)
 	{
-		bk_printf(out, "'%s = <", strpool_cstr(&fort->strpool, word->name));
+		bk_printf(out, "'%s = <", strpool_cstr(&fort->ctx->strpool, word->name));
 
 		if(word->data != NULL)
 		{
@@ -109,7 +109,7 @@ fort_print_word(fort_t* fort, struct bk_file_s* out, fort_word_t* word, int recu
 	}
 	else
 	{
-		bk_printf(out, "%s", strpool_cstr(&fort->strpool, word->name));
+		bk_printf(out, "%s", strpool_cstr(&fort->ctx->strpool, word->name));
 	}
 
 	return FORT_OK;
@@ -153,7 +153,7 @@ fort_inspect_dict(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	for(fort_word_t* itr = fort->dict; itr != NULL; itr = itr->previous)
+	for(fort_word_t* itr = fort->ctx->dict; itr != NULL; itr = itr->previous)
 	{
 		FORT_ENSURE(fort_print_word(fort, fort->config.output, itr, 1));
 		bk_printf(fort->config.output, "\n");
@@ -223,7 +223,7 @@ fort_tick(fort_t* fort, fort_word_t* word)
 	FORT_ASSERT(err != FORT_ERR_NOT_FOUND, FORT_ERR_SYNTAX);
 	FORT_ASSERT(err == FORT_OK, err);
 
-	fort_word_t* ticked_word = fort_find_internal(fort, token.lexeme);
+	fort_word_t* ticked_word = fort_find_internal(fort->ctx, token.lexeme);
 	if(ticked_word == NULL)
 	{
 		fort_cell_t value;
@@ -240,7 +240,7 @@ fort_tick(fort_t* fort, fort_word_t* word)
 	{
 		return fort_push(fort, (fort_cell_t){
 			.type = word->data[0].data.integer,
-			.data = { .ref = (fort_word_t*)ticked_word }
+			.data = { .ref = ticked_word }
 		});
 	}
 }
@@ -329,9 +329,6 @@ fort_load_builtins(fort_t* fort)
 		": return-to-native switch [ def-end\n"
 	);
 	FORT_ENSURE(fort_interpret_string(fort, core, FORT_STRING_REF("<core>")));
-
-	fort->return_to_native = fort_find_internal(fort, FORT_STRING_REF("return-to-native"));
-	FORT_ASSERT(fort->return_to_native != NULL, FORT_ERR_NOT_FOUND);
 
 	return FORT_OK;
 }

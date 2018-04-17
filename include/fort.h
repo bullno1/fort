@@ -69,6 +69,14 @@ BK_ENUM(fort_cell_type_t, FORT_CELL_TYPE)
 
 BK_ENUM(fort_err_t, FORT_ERR)
 
+#define FORT_GC_OP(X) \
+	X(FORT_GC_PAUSE) \
+	X(FORT_GC_RESUME) \
+	X(FORT_GC_STEP) \
+	X(FORT_GC_COLLECT)
+
+BK_ENUM(fort_gc_op_t, FORT_GC_OP)
+
 struct fort_cell_s
 {
 	fort_cell_type_t type;
@@ -96,7 +104,7 @@ struct fort_loc_range_s
 struct fort_string_ref_s
 {
 	const char* ptr;
-	fort_int_t length;
+	size_t length;
 };
 
 struct fort_token_s
@@ -195,6 +203,15 @@ fort_interpret_string(fort_t* fort, fort_string_ref_t str, fort_string_ref_t fil
 
 FORT_DECL fort_int_t
 fort_is_interpreting(fort_t* fort);
+
+/** @} */
+
+/** @defgroup gc
+ *  @{
+ */
+
+FORT_DECL fort_err_t
+fort_gc(fort_ctx_t* ctx, fort_gc_op_t op);
 
 /** @} */
 

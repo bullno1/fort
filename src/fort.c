@@ -10,11 +10,10 @@ fort_create_ctx(const fort_ctx_config_t* config, fort_ctx_t** ctxp)
 	FORT_ASSERT(ctx != NULL, FORT_ERR_OOM);
 
 	*ctx = (fort_ctx_t){ .config = *config };
-
-	strpool_config_t strpool_cfg = strpool_default_config;
-	strpool_cfg.memctx = config->allocator;
-	strpool_cfg.ignore_case = 1;
-	strpool_init(&ctx->strpool, &strpool_cfg);
+	kh_init(fort_strpool, config->allocator, &ctx->strpool);
+	kh_init(fort_dict, config->allocator, &ctx->dict);
+	ugc_init(&ctx->gc, &fort_gc_scan, fort_gc_release);
+	ctx->gc.userdata = ctx;
 
 	fort_reset_ctx(ctx);
 
@@ -26,15 +25,16 @@ fort_create_ctx(const fort_ctx_config_t* config, fort_ctx_t** ctxp)
 void
 fort_destroy_ctx(fort_ctx_t* ctx)
 {
-	fort_reset_dict(ctx);
-	strpool_term(&ctx->strpool);
+	ugc_release_all(&ctx->gc);
+	kh_cleanup(fort_dict, &ctx->dict);
+	kh_cleanup(fort_strpool, &ctx->strpool);
 	bk_free(ctx->config.allocator, ctx);
 }
 
 void
 fort_reset_ctx(fort_ctx_t* ctx)
 {
-	fort_reset_dict(ctx);
+	kh_clear(fort_dict, &ctx->dict);
 }
 
 fort_err_t

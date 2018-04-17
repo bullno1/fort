@@ -2,7 +2,6 @@
 #include <fort-utils.h>
 #include <bk/assert.h>
 #include <bk/array.h>
-#include <bk/printf.h>
 
 static int
 fort_is_numeric(fort_cell_type_t type)
@@ -82,84 +81,8 @@ fort_colon(fort_t* fort, fort_word_t* word)
 static fort_err_t
 fort_last_word(fort_t* fort, fort_word_t** wordp)
 {
-	*wordp = fort->current_word != NULL ? fort->current_word : fort->ctx->dict;
+	*wordp = fort->current_word != NULL ? fort->current_word : fort->last_word;
 	return *wordp != NULL ? FORT_OK : FORT_ERR_NOT_FOUND;
-}
-
-static fort_err_t
-fort_print(fort_t* fort, struct bk_file_s* out, fort_cell_t cell, int recurse);
-
-static fort_err_t
-fort_print_word(fort_t* fort, struct bk_file_s* out, fort_word_t* word, int recurse)
-{
-	if(recurse)
-	{
-		bk_printf(out, "'%s = <", strpool_cstr(&fort->ctx->strpool, word->name));
-
-		if(word->data != NULL)
-		{
-			bk_array_foreach(fort_cell_t, itr, word->data)
-			{
-				bk_printf(out, " ");
-				fort_print(fort, out, *itr, 0);
-			}
-		}
-
-		bk_printf(out, " >");
-	}
-	else
-	{
-		bk_printf(out, "%s", strpool_cstr(&fort->ctx->strpool, word->name));
-	}
-
-	return FORT_OK;
-}
-
-static fort_err_t
-fort_print(fort_t* fort, struct bk_file_s* out, fort_cell_t cell, int recurse)
-{
-	switch(cell.type)
-	{
-		case FORT_INTEGER:
-			bk_printf(out, FORT_INT_FMT, cell.data.integer);
-			return FORT_OK;
-		case FORT_REAL:
-			bk_printf(out, FORT_REAL_FMT, cell.data.real);
-			return FORT_OK;
-		case FORT_TICK:
-		case FORT_XT:
-			return fort_print_word(fort, out, cell.data.ref, recurse);
-		default:
-			bk_printf(out, "<unknown>");
-			return FORT_OK;
-	}
-}
-
-static fort_err_t
-fort_inspect(fort_t* fort, fort_word_t* word)
-{
-	(void)word;
-
-	fort_cell_t cell;
-	FORT_ENSURE(fort_pop(fort, &cell));
-
-	FORT_ENSURE(fort_print(fort, fort->config.output, cell, 1));
-
-	return FORT_OK;
-}
-
-static fort_err_t
-fort_inspect_dict(fort_t* fort, fort_word_t* word)
-{
-	(void)word;
-
-	for(fort_word_t* itr = fort->ctx->dict; itr != NULL; itr = itr->previous)
-	{
-		FORT_ENSURE(fort_print_word(fort, fort->config.output, itr, 1));
-		bk_printf(fort->config.output, "\n");
-	}
-
-	return FORT_OK;
 }
 
 static fort_err_t
@@ -317,8 +240,6 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("compile"), &fort_compile, 0, 0));
 	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF(":"), &fort_colon, 0, 0));
 	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("def-end"), &fort_def_end, 0, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("inspect"), &fort_inspect, 0, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("inspect-dict"), &fort_inspect_dict, 0, 0));
 	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("exit"), &fort_return, FORT_OK, 0, 0));
 	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("switch"), &fort_return, FORT_SWITCH, 0, 0));
 	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("'"), &fort_tick, FORT_XT, 0, 0));

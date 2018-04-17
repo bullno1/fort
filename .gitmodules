@@ -4,3 +4,9 @@
 [submodule "deps/munit"]
 	path = deps/munit
 	url = https://github.com/nemequ/munit.git
+[submodule "deps/ugc"]
+	path = deps/ugc
+	url = https://github.com/bullno1/ugc.git
+[submodule "deps/xxHash"]
+	path = deps/xxHash
+	url = https://github.com/Cyan4973/xxHash.git

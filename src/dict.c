@@ -1,42 +1,29 @@
-#define _GNU_SOURCE
 #include "internal.h"
-#include <string.h>
-#include <limits.h>
-#include <bk/allocator.h>
 #include <bk/array.h>
-#include "vendor/strpool.h"
+#include <bk/allocator.h>
 #include <fort-utils.h>
 
-#ifdef _MSVC
-#	define FORT_STRNICMP(s1, s2, len) (strnicmp(s1, s2, len))
-#else
-#	define FORT_STRNICMP(s1, s2, len) (strncasecmp(s1, s2, len))
-#endif
-
-STRPOOL_U64
-fort_alloc_string(strpool_t* strpool, fort_string_ref_t str)
+BK_INLINE khint_t
+fort_cell_hash(fort_cell_t cell)
 {
-	STRPOOL_U64 handle = strpool_inject(strpool, str.ptr, (int)str.length);
-	strpool_incref(strpool, handle);
-	return handle;
+	return XXH32(&cell, sizeof(cell), __LINE__);
 }
 
-void
-fort_free_string(strpool_t* strpool, STRPOOL_U64 handle)
+BK_INLINE khint_t
+fort_cell_equal(fort_cell_t lhs, fort_cell_t rhs)
 {
-	if(strpool_decref(strpool, handle) == 0)
-	{
-		strpool_discard(strpool, handle);
-	}
+	return lhs.type == rhs.type && lhs.data.ref == rhs.data.ref;
 }
 
-static void
-fort_destroy_word(fort_ctx_t* ctx, fort_word_t* word)
-{
-	if(word->data != NULL) { bk_array_destroy(word->data); }
-	fort_free_string(&ctx->strpool, word->name);
-	bk_free(ctx->config.allocator, word);
-}
+__KHASH_IMPL(
+	fort_dict,
+	,
+	fort_cell_t,
+	fort_cell_t,
+	1,
+	fort_cell_hash,
+	fort_cell_equal
+)
 
 fort_err_t
 fort_compile_internal(fort_t* fort, fort_cell_t cell)
@@ -50,21 +37,9 @@ fort_compile_internal(fort_t* fort, fort_cell_t cell)
 	}
 
 	bk_array_push(current_word->data, cell);
+	fort_gc_add_cell_ref(fort->ctx, current_word, cell);
 
 	return FORT_OK;
-}
-
-void
-fort_reset_dict(fort_ctx_t* ctx)
-{
-	for(fort_word_t* itr = ctx->dict; itr != NULL;)
-	{
-		fort_word_t* next = itr->previous;
-		fort_destroy_word(ctx, itr);
-		itr = next;
-	}
-
-	ctx->dict = NULL;
 }
 
 fort_err_t
@@ -75,18 +50,23 @@ fort_begin_word(fort_t* fort, fort_string_ref_t name, fort_native_fn_t code)
 	fort_word_t* current_word = fort->current_word;
 	if(current_word != NULL)
 	{
-		fort_free_string(&fort->ctx->strpool, current_word->name);
-		bk_array_clear(current_word->data);
+		if(current_word->data) { bk_array_clear(current_word->data); }
 	}
 	else
 	{
-		fort->current_word = current_word = BK_UNSAFE_NEW(fort->ctx->config.allocator, fort_word_t);
-		if(current_word == NULL) { return FORT_ERR_OOM; }
+		FORT_ENSURE(fort_gc_alloc(
+			fort->ctx,
+			sizeof(fort_word_t),
+			BK_ALIGN_OF(fort_word_t),
+			FORT_XT,
+			(void*)&current_word
+		));
 
 		current_word->data = NULL;
+		fort->current_word = current_word;
 	}
 
-	current_word->name = fort_alloc_string(&fort->ctx->strpool, name);
+	FORT_ENSURE(fort_strpool_alloc(fort->ctx, name, &current_word->name));
 	current_word->code = code;
 	current_word->immediate = 0;
 	current_word->compile_only = 0;
@@ -97,8 +77,21 @@ fort_begin_word(fort_t* fort, fort_string_ref_t name, fort_native_fn_t code)
 fort_err_t
 fort_end_word(fort_t* fort)
 {
-	fort->current_word->previous = fort->ctx->dict;
-	fort->ctx->dict = fort->current_word;
+	fort_cell_t key = {
+		.type = FORT_STRING,
+		.data = { .ref = (fort_string_t*)fort->current_word->name }
+	};
+	fort_cell_t value = {
+		.type = FORT_XT,
+		.data = { .ref = fort->current_word }
+	};
+
+	int ret;
+	khint_t itr = kh_put(fort_dict, &fort->ctx->dict, key, &ret);
+	FORT_ASSERT(ret != -1, FORT_ERR_OOM);
+	kh_value(&fort->ctx->dict, itr) = value;
+
+	fort->last_word = fort->current_word;
 	fort->current_word = NULL;
 
 	return FORT_OK;
@@ -107,15 +100,16 @@ fort_end_word(fort_t* fort)
 fort_word_t*
 fort_find_internal(fort_ctx_t* ctx, fort_string_ref_t name)
 {
-	for(fort_word_t* itr = ctx->dict; itr != NULL; itr = itr->previous)
+	kh_foreach(itr, &ctx->dict)
 	{
-		int cstr_len = strpool_length(&ctx->strpool, itr->name);
-		if((fort_int_t)cstr_len != name.length) { continue; }
-
-		const char* cstr = strpool_cstr(&ctx->strpool, itr->name);
-		if(FORT_STRNICMP(name.ptr, cstr, cstr_len) == 0)
+		fort_cell_t key = kh_key(&ctx->dict, itr);
+		const fort_string_t* word_name = key.data.ref;
+		if(
+			name.length == (size_t)word_name->length
+			&& memcmp(name.ptr, word_name->ptr, name.length) == 0
+		)
 		{
-			return itr;
+			return kh_value(&ctx->dict, itr).data.ref;
 		}
 	}
 

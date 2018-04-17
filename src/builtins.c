@@ -211,6 +211,17 @@ fort_scan_until_char(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
+fort_get_next_char(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	char ch;
+	FORT_ENSURE(fort_next_char(fort, &ch));
+
+	return fort_push_integer(fort, ch);
+}
+
+static fort_err_t
 fort_compile(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -283,6 +294,7 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF(":"), &fort_colon, 0, 0));
 	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("def-end"), &fort_def_end, 0, 0));
 	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("scan-until-char"), &fort_scan_until_char, 0, 0));
+	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("next-char"), &fort_get_next_char, 0, 0));
 	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("exit"), &fort_return, FORT_OK, 0, 0));
 	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("switch"), &fort_return, FORT_SWITCH, 0, 0));
 	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("'"), &fort_tick, FORT_XT, 0, 0));
@@ -291,7 +303,9 @@ fort_load_builtins(fort_t* fort)
 	fort_string_ref_t core = FORT_STRING_REF(
 		": ; immediate compile-only ['] exit [ compile ] compile def-end [ ' [ compile ] exit [ def-end\n"
 		": return-to-native switch [ def-end\n"
-		": \" 34 scan-until-char ;\n"
+		": c immediate next-char ;\n"
+		": [compile] immediate compile-only compile ;\n"
+		": \" c \" [compile] scan-until-char ;\n"
 	);
 	FORT_ENSURE(fort_interpret_string(fort, core, FORT_STRING_REF("<core>")));
 

@@ -1,3 +1,7 @@
+#ifndef FORT_USE_EXTERNAL_BK
+#define BK_IMPLEMENTATION
+#endif
+
 #include <stdlib.h>
 #include <bk/stdstream.h>
 #include <bk/default_allocator.h>

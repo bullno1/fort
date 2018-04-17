@@ -172,7 +172,19 @@ FORT_DECL fort_err_t
 fort_pop(fort_t* fort, fort_cell_t* value);
 
 FORT_DECL fort_err_t
+fort_as_string(fort_cell_t* cell, fort_string_ref_t* value);
+
+FORT_DECL fort_err_t
+fort_as_int(fort_cell_t* cell, fort_int_t* value);
+
+FORT_DECL fort_err_t
+fort_as_real(fort_cell_t* cell, fort_real_t* value);
+
+FORT_DECL fort_err_t
 fort_peek(fort_t* fort, fort_int_t index, fort_cell_t* value);
+
+FORT_DECL fort_err_t
+fort_put(fort_t* fort, fort_int_t index, fort_cell_t* value);
 
 FORT_DECL fort_int_t
 fort_stack_size(fort_t* fort);

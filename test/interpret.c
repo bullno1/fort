@@ -62,10 +62,54 @@ arithmetic(const MunitParameter params[], void* fixture_)
 	return MUNIT_OK;
 }
 
+static MunitResult
+string(const MunitParameter params[], void* fixture_)
+{
+	(void)params;
+	fixture_t* fixture = fixture_;
+
+	munit_assert_enum(
+		fort_err_t,
+		FORT_OK, ==,
+		fort_interpret_string(
+			fixture->fort1,
+			FORT_STRING_REF("\" hello world\""),
+			FORT_STRING_REF(__FILE__)
+		)
+	);
+
+	fort_cell_t top;
+	fort_string_ref_t str;
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &top));
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_as_string(&top, &str));
+	munit_assert_string_equal("hello world", str.ptr);
+
+	munit_assert_enum(
+		fort_err_t,
+		FORT_OK, ==,
+		fort_interpret_string(
+			fixture->fort1,
+			FORT_STRING_REF("\" hello world \""),
+			FORT_STRING_REF(__FILE__)
+		)
+	);
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &top));
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_as_string(&top, &str));
+	munit_assert_string_equal("hello world ", str.ptr);
+
+	return MUNIT_OK;
+}
+
 static MunitTest tests[] = {
 	{
 		.name = "/number",
 		.test = number,
+		.setup = setup_fixture,
+		.tear_down = teardown_fixture
+	},
+	{
+		.name = "/string",
+		.test = string,
 		.setup = setup_fixture,
 		.tear_down = teardown_fixture
 	},

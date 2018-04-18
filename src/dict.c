@@ -100,18 +100,16 @@ fort_end_word(fort_t* fort)
 fort_word_t*
 fort_find_internal(fort_ctx_t* ctx, fort_string_ref_t name)
 {
-	kh_foreach(itr, &ctx->dict)
-	{
-		fort_cell_t key = kh_key(&ctx->dict, itr);
-		const fort_string_t* word_name = key.data.ref;
-		if(
-			name.length == (size_t)word_name->length
-			&& memcmp(name.ptr, word_name->ptr, name.length) == 0
-		)
-		{
-			return kh_value(&ctx->dict, itr).data.ref;
-		}
-	}
+	fort_string_t* str;
+	if(fort_strpool_check(ctx, name, &str) != FORT_OK) { return NULL; }
 
-	return NULL;
+	fort_cell_t key = {
+		.type = FORT_STRING,
+		.data = { .ref = str }
+	};
+
+	khiter_t itr = kh_get(fort_dict, &ctx->dict, key);
+	if(itr == kh_end(&ctx->dict)) { return NULL; }
+
+	return kh_value(&ctx->dict, itr).data.ref;
 }

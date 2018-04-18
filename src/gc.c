@@ -96,19 +96,6 @@ fort_gc_add_cell_ref(fort_ctx_t* ctx, void* src, fort_cell_t dest)
 }
 
 static void
-fort_gc_scan_word(ugc_t* gc, fort_word_t* word)
-{
-	fort_gc_scan(gc->userdata, (void*)word->name);
-	if(word->data != NULL)
-	{
-		bk_array_foreach(fort_cell_t, itr, word->data)
-		{
-			fort_gc_scan_cell(gc->userdata, *itr);
-		}
-	}
-}
-
-static void
 fort_gc_scan_dict(fort_ctx_t* ctx, fort_dict_t* dict)
 {
 	kh_foreach(itr, dict)
@@ -125,6 +112,24 @@ fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header)
 	{
 		fort_ctx_t* ctx = gc->userdata;
 		fort_gc_scan_dict(ctx, &ctx->dict);
+		bk_dlist_foreach(itr, &ctx->forts)
+		{
+			fort_t* fort = BK_CONTAINER_OF(itr, fort_t, ctx_link);
+
+			fort_gc_scan(ctx, fort->return_to_native);
+			fort_gc_scan(ctx, fort->last_word);
+			fort_gc_scan(ctx, fort->current_word);
+
+			bk_array_foreach(fort_cell_t, itr, fort->param_stack)
+			{
+				fort_gc_scan_cell(gc->userdata, *itr);
+			}
+
+			bk_array_foreach(fort_stack_frame_t, itr, fort->return_stack)
+			{
+				fort_gc_scan(ctx, (void*)itr->word);
+			}
+		}
 	}
 	else
 	{
@@ -133,7 +138,15 @@ fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header)
 
 		if(header->type == FORT_TICK || header->type == FORT_XT)
 		{
-			fort_gc_scan_word(gc, body);
+			fort_word_t* word = body;
+			fort_gc_scan(gc->userdata, word->name);
+			if(word->data != NULL)
+			{
+				bk_array_foreach(fort_cell_t, itr, word->data)
+				{
+					fort_gc_scan_cell(gc->userdata, *itr);
+				}
+			}
 		}
 	}
 }

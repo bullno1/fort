@@ -3,6 +3,7 @@
 
 #include <fort.h>
 #include <ugc/ugc.h>
+#include <bk/dlist.h>
 #include "vendor/khash.h"
 #define XXH_NAMESPACE fort_
 #include <xxHash/xxhash.h>
@@ -56,10 +57,13 @@ struct fort_ctx_s
 	ugc_t gc;
 	fort_dict_t dict;
 	fort_strpool_t strpool;
+	bk_dlist_link_t forts;
 };
 
 struct fort_s
 {
+	bk_dlist_link_t ctx_link;
+
 	fort_config_t config;
 	fort_ctx_t* ctx;
 	BK_ARRAY(fort_cell_t) param_stack;

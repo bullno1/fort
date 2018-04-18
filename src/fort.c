@@ -1,5 +1,6 @@
 #include "internal.h"
 #include <bk/allocator.h>
+#include <bk/assert.h>
 #include <bk/array.h>
 #include <fort/utils.h>
 
@@ -12,6 +13,7 @@ fort_create_ctx(const fort_ctx_config_t* config, fort_ctx_t** ctxp)
 	*ctx = (fort_ctx_t){ .config = *config };
 	kh_init(fort_strpool, config->allocator, &ctx->strpool);
 	kh_init(fort_dict, config->allocator, &ctx->dict);
+	bk_dlist_init(&ctx->forts);
 	ugc_init(&ctx->gc, &fort_gc_scan_internal, fort_gc_release_internal);
 	ctx->gc.userdata = ctx;
 
@@ -25,6 +27,7 @@ fort_create_ctx(const fort_ctx_config_t* config, fort_ctx_t** ctxp)
 void
 fort_destroy_ctx(fort_ctx_t* ctx)
 {
+	BK_ASSERT(bk_dlist_is_empty(&ctx->forts), "Destroying context with live forts");
 	ugc_release_all(&ctx->gc);
 	kh_cleanup(fort_dict, &ctx->dict);
 	kh_cleanup(fort_strpool, &ctx->strpool);
@@ -51,6 +54,7 @@ fort_create(fort_ctx_t* ctx, const fort_config_t* config, fort_t** fortp)
 		.scan_buf = bk_array_create(ctx->config.allocator, char, 16)
 	};
 
+	bk_dlist_append(&ctx->forts, &fort->ctx_link);
 	fort_reset(fort);
 
 	*fortp = fort;
@@ -60,6 +64,7 @@ fort_create(fort_ctx_t* ctx, const fort_config_t* config, fort_t** fortp)
 void
 fort_destroy(fort_t* fort)
 {
+	bk_dlist_unlink(&fort->ctx_link);
 	bk_array_destroy(fort->scan_buf);
 	bk_array_destroy(fort->return_stack);
 	bk_array_destroy(fort->param_stack);

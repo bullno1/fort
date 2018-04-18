@@ -73,7 +73,7 @@ fort_strpool_alloc(
 	FORT_ASSERT(ref.length <= INT_MAX, FORT_ERR_OOM);
 
 	fort_strpool_entry_t entry = {
-		.hash = XXH32(ref.ptr, ref.length, __LINE__),
+		.hash = XXH32(ref.ptr, ref.length, (uintptr_t)ctx),
 		.owned = 0,
 		.content = { .ref = ref }
 	};
@@ -109,5 +109,51 @@ fort_strpool_alloc(
 	{
 		*strp = kh_key(&ctx->strpool, itr).content.str;
 		return FORT_OK;
+	}
+}
+
+fort_err_t
+fort_strpool_release(fort_ctx_t* ctx, const fort_string_t* str)
+{
+	fort_strpool_entry_t entry = {
+		.hash = XXH32(str->ptr, str->length, (uintptr_t)ctx),
+		.owned = 1,
+		.content = { .str = (fort_string_t*)str }
+	};
+
+	khint_t itr = kh_get(fort_strpool, &ctx->strpool, entry);
+	if(itr != kh_end(&ctx->strpool))
+	{
+		kh_del(fort_strpool, &ctx->strpool, itr);
+		return FORT_OK;
+	}
+	else
+	{
+		return FORT_ERR_NOT_FOUND;
+	}
+}
+
+fort_err_t
+fort_strpool_check(
+	fort_ctx_t* ctx,
+	fort_string_ref_t ref,
+	const fort_string_t** strp
+)
+{
+	fort_strpool_entry_t entry = {
+		.hash = XXH32(ref.ptr, ref.length, (uintptr_t)ctx),
+		.owned = 0,
+		.content = { .ref = ref }
+	};
+
+	khint_t itr = kh_get(fort_strpool, &ctx->strpool, entry);
+	if(itr != kh_end(&ctx->strpool))
+	{
+		*strp = kh_key(&ctx->strpool, itr).content.str;
+		return FORT_OK;
+	}
+	else
+	{
+		return FORT_ERR_NOT_FOUND;
 	}
 }

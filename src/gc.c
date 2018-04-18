@@ -27,7 +27,6 @@ fort_gc_get_cell_ref(fort_cell_t cell)
 		|| cell.type == FORT_STRING
 		|| cell.type == FORT_XT
 		|| cell.type == FORT_TICK
-		|| cell.type == FORT_OBJ
 	)
 	{
 		return cell.data.ref;
@@ -144,11 +143,16 @@ fort_gc_release_internal(ugc_t* gc, ugc_header_t* ugc_header)
 {
 	fort_gc_header_t* header = BK_CONTAINER_OF(ugc_header, fort_gc_header_t, ugc);
 	fort_ctx_t* ctx = gc->userdata;
+	void* body = (char*)header + header->offset;
 
 	if(header->type == FORT_TICK || header->type == FORT_XT)
 	{
-		fort_word_t* word = (fort_word_t*)((char*)header + header->offset);
+		fort_word_t* word = body;
 		if(word->data != NULL) { bk_array_destroy(word->data); }
+	}
+	else if(header->type == FORT_STRING)
+	{
+		fort_strpool_release(ctx, body);
 	}
 
 	bk_free(ctx->config.allocator, header);

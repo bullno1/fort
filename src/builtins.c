@@ -19,8 +19,8 @@ fort_promote_int_to_real(fort_cell_t* cell)
 static fort_err_t
 fort_numeric_2pop(fort_t* fort, fort_cell_t* lhs, fort_cell_t* rhs)
 {
-	FORT_ENSURE(fort_pop(fort, rhs));
-	FORT_ENSURE(fort_pop(fort, lhs));
+	FORT_ENSURE(fort_peek(fort, 0, rhs));
+	FORT_ENSURE(fort_peek(fort, 1, lhs));
 
 	FORT_ASSERT(
 		fort_is_numeric(lhs->type) && fort_is_numeric(rhs->type),
@@ -33,7 +33,7 @@ fort_numeric_2pop(fort_t* fort, fort_cell_t* lhs, fort_cell_t* rhs)
 		if(rhs->type == FORT_INTEGER) { fort_promote_int_to_real(rhs); }
 	}
 
-	return FORT_OK;
+	return fort_ndrop(fort, 2);
 }
 
 static fort_err_t
@@ -174,8 +174,10 @@ fort_scan_until_char(fort_t* fort, fort_word_t* word)
 	(void)word;
 
 	fort_cell_t cell;
-	FORT_ENSURE(fort_pop(fort, &cell));
-	FORT_ASSERT(cell.type == FORT_INTEGER, FORT_ERR_TYPE);
+	fort_int_t end_char;
+	FORT_ENSURE(fort_peek(fort, 0, &cell));
+	FORT_ENSURE(fort_as_int(&cell, &end_char));
+	FORT_ENSURE(fort_ndrop(fort, 1));
 
 	// TODO: record start pos
 
@@ -194,7 +196,7 @@ fort_scan_until_char(fort_t* fort, fort_word_t* word)
 			return err;
 		}
 
-		if(ch == cell.data.integer)
+		if(ch == end_char)
 		{
 			fort_string_ref_t ref = {
 				.length = bk_array_len(fort->scan_buf),
@@ -227,8 +229,10 @@ fort_compile(fort_t* fort, fort_word_t* word)
 	(void)word;
 
 	fort_cell_t cell;
-	FORT_ENSURE(fort_pop(fort, &cell));
-	return fort_compile_internal(fort, cell);
+	FORT_ENSURE(fort_peek(fort, 0, &cell));
+	FORT_ENSURE(fort_compile_internal(fort, cell));
+
+	return fort_ndrop(fort, 1);
 }
 
 static fort_err_t

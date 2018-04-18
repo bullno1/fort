@@ -168,7 +168,7 @@ FORT_DECL fort_err_t
 fort_push_string(fort_t* fort, fort_string_ref_t string);
 
 FORT_DECL fort_err_t
-fort_pop(fort_t* fort, fort_cell_t* value);
+fort_ndrop(fort_t* fort, fort_int_t count);
 
 FORT_DECL fort_err_t
 fort_as_string(fort_cell_t* cell, fort_string_ref_t* value);

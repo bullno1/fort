@@ -39,15 +39,14 @@ fort_push_string(fort_t* fort, fort_string_ref_t value)
 }
 
 fort_err_t
-fort_pop(fort_t* fort, fort_cell_t* value)
+fort_ndrop(fort_t* fort, fort_int_t count)
 {
+	FORT_ASSERT(count >= 0, FORT_ERR_UNDERFLOW);
+
 	fort_int_t stack_size = bk_array_len(fort->param_stack);
-	FORT_ASSERT(stack_size > 0, FORT_ERR_UNDERFLOW);
+	FORT_ASSERT(stack_size >= count, FORT_ERR_UNDERFLOW);
 
-	--stack_size;
-
-	*value = fort->param_stack[stack_size];
-	bk_array_resize(fort->param_stack, stack_size);
+	bk_array_resize(fort->param_stack, stack_size - count);
 
 	return FORT_OK;
 }

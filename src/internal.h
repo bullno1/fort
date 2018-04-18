@@ -114,10 +114,10 @@ fort_gc_alloc(
 );
 
 void
-fort_gc_trace(fort_ctx_t* ctx, void* mem);
+fort_gc_scan(fort_ctx_t* ctx, void* mem);
 
 void
-fort_gc_trace_cell(fort_ctx_t* ctx, fort_cell_t cell);
+fort_gc_scan_cell(fort_ctx_t* ctx, fort_cell_t cell);
 
 void
 fort_gc_add_ref(fort_ctx_t* ctx, void* src, void* dest);

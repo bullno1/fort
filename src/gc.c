@@ -69,7 +69,7 @@ fort_gc_alloc(
 }
 
 void
-fort_gc_trace(fort_ctx_t* ctx, void* mem)
+fort_gc_scan(fort_ctx_t* ctx, void* mem)
 {
 	if(mem == NULL) { return; }
 
@@ -77,9 +77,9 @@ fort_gc_trace(fort_ctx_t* ctx, void* mem)
 }
 
 void
-fort_gc_trace_cell(fort_ctx_t* ctx, fort_cell_t cell)
+fort_gc_scan_cell(fort_ctx_t* ctx, fort_cell_t cell)
 {
-	fort_gc_trace(ctx, fort_gc_get_cell_ref(cell));
+	fort_gc_scan(ctx, fort_gc_get_cell_ref(cell));
 }
 
 void
@@ -97,25 +97,25 @@ fort_gc_add_cell_ref(fort_ctx_t* ctx, void* src, fort_cell_t dest)
 }
 
 static void
-fort_gc_trace_word(ugc_t* gc, fort_word_t* word)
+fort_gc_scan_word(ugc_t* gc, fort_word_t* word)
 {
-	fort_gc_trace(gc->userdata, (void*)word->name);
+	fort_gc_scan(gc->userdata, (void*)word->name);
 	if(word->data != NULL)
 	{
 		bk_array_foreach(fort_cell_t, itr, word->data)
 		{
-			fort_gc_trace_cell(gc->userdata, *itr);
+			fort_gc_scan_cell(gc->userdata, *itr);
 		}
 	}
 }
 
 static void
-fort_gc_trace_dict(fort_ctx_t* ctx, fort_dict_t* dict)
+fort_gc_scan_dict(fort_ctx_t* ctx, fort_dict_t* dict)
 {
 	kh_foreach(itr, dict)
 	{
-		fort_gc_trace_cell(ctx, kh_key(dict, itr));
-		fort_gc_trace_cell(ctx, kh_value(dict, itr));
+		fort_gc_scan_cell(ctx, kh_key(dict, itr));
+		fort_gc_scan_cell(ctx, kh_value(dict, itr));
 	}
 }
 
@@ -125,7 +125,7 @@ fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header)
 	if(ugc_header == NULL)
 	{
 		fort_ctx_t* ctx = gc->userdata;
-		fort_gc_trace_dict(ctx, &ctx->dict);
+		fort_gc_scan_dict(ctx, &ctx->dict);
 	}
 	else
 	{
@@ -134,7 +134,7 @@ fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header)
 
 		if(header->type == FORT_TICK || header->type == FORT_XT)
 		{
-			fort_gc_trace_word(gc, body);
+			fort_gc_scan_word(gc, body);
 		}
 	}
 }

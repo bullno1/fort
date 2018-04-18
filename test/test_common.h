@@ -3,7 +3,7 @@
 
 #include <munit/munit.h>
 #include <fort.h>
-#include <fort-utils.h>
+#include <fort/utils.h>
 #include <bk/stdstream.h>
 #include <bk/fs/mem.h>
 #include <bk/allocator.h>

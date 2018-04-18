@@ -1,6 +1,6 @@
 #include "internal.h"
 #include <bk/array.h>
-#include <fort-utils.h>
+#include <fort/utils.h>
 
 fort_err_t
 fort_push(fort_t* fort, fort_cell_t value)

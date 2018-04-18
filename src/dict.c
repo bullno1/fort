@@ -1,7 +1,7 @@
 #include "internal.h"
 #include <bk/array.h>
 #include <bk/allocator.h>
-#include <fort-utils.h>
+#include <fort/utils.h>
 
 BK_INLINE khint_t
 fort_cell_hash(fort_cell_t cell)

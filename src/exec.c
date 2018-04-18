@@ -1,6 +1,6 @@
 #include "internal.h"
 #include <bk/array.h>
-#include <fort-utils.h>
+#include <fort/utils.h>
 
 static fort_err_t
 fort_push_stack_frame(fort_t* fort, fort_word_t* word)

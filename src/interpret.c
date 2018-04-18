@@ -1,7 +1,7 @@
 #include "internal.h"
 #include <bk/array.h>
 #include <bk/fs/mem.h>
-#include <fort-utils.h>
+#include <fort/utils.h>
 
 static fort_err_t
 fort_interpret_token(fort_t* fort, const fort_token_t* token)

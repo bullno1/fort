@@ -1,7 +1,7 @@
 #include "internal.h"
-#include <fort-utils.h>
 #include <bk/assert.h>
 #include <bk/array.h>
+#include <fort/utils.h>
 
 static int
 fort_is_numeric(fort_cell_type_t type)

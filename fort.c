@@ -7,7 +7,7 @@
 #include <bk/default_allocator.h>
 #include <bk/printf.h>
 #include <fort.h>
-#include <fort-utils.h>
+#include <fort/utils.h>
 
 static fort_err_t
 fort_main(int argc, char* argv[])

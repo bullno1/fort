@@ -1,7 +1,7 @@
 #include "internal.h"
 #include <limits.h>
 #include <bk/allocator.h>
-#include <fort-utils.h>
+#include <fort/utils.h>
 
 struct fort_string_align_helper_s
 {

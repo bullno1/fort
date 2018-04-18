@@ -1,7 +1,7 @@
 #include "internal.h"
 #include <bk/array.h>
 #include <bk/allocator.h>
-#include <fort-utils.h>
+#include <fort/utils.h>
 
 typedef struct fort_gc_header_s fort_gc_header_t;
 

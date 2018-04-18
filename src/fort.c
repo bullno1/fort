@@ -1,7 +1,7 @@
 #include "internal.h"
 #include <bk/allocator.h>
 #include <bk/array.h>
-#include <fort-utils.h>
+#include <fort/utils.h>
 
 fort_err_t
 fort_create_ctx(const fort_ctx_config_t* config, fort_ctx_t** ctxp)

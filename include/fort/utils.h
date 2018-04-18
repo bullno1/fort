@@ -20,4 +20,24 @@ fort_string_ref(const char* string)
 	};
 }
 
+BK_INLINE fort_err_t
+fort_pop_integer(fort_t* fort, fort_int_t* value)
+{
+	fort_cell_t top;
+	FORT_ENSURE(fort_peek(fort, 0, &top));
+	FORT_ENSURE(fort_as_int(&top, value));
+
+	return fort_ndrop(fort, 1);
+}
+
+BK_INLINE fort_err_t
+fort_pop_real(fort_t* fort, fort_real_t* value)
+{
+	fort_cell_t top;
+	FORT_ENSURE(fort_peek(fort, 0, &top));
+	FORT_ENSURE(fort_as_real(&top, value));
+
+	return fort_ndrop(fort, 1);
+}
+
 #endif

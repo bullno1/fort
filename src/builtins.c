@@ -173,11 +173,8 @@ fort_scan_until_char(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort_cell_t cell;
 	fort_int_t end_char;
-	FORT_ENSURE(fort_peek(fort, 0, &cell));
-	FORT_ENSURE(fort_as_int(&cell, &end_char));
-	FORT_ENSURE(fort_ndrop(fort, 1));
+	FORT_ENSURE(fort_pop_integer(fort, &end_char));
 
 	// TODO: record start pos
 

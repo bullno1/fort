@@ -128,21 +128,21 @@ fort_gc_alloc(
 );
 
 void
-fort_gc_scan(fort_ctx_t* ctx, void* mem);
+fort_gc_visit_ptr(fort_ctx_t* ctx, void* mem);
 
 void
-fort_gc_scan_cell(fort_ctx_t* ctx, fort_cell_t cell);
+fort_gc_visit_cell(fort_ctx_t* ctx, fort_cell_t cell);
 
 void
-fort_gc_add_ref(fort_ctx_t* ctx, void* src, void* dest);
+fort_gc_add_ptr_ref(fort_ctx_t* ctx, void* src, void* dest);
 
 void
 fort_gc_add_cell_ref(fort_ctx_t* ctx, void* src, fort_cell_t dest);
 
 void
-fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header);
+fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header);
 
 void
-fort_gc_release_internal(ugc_t* gc, ugc_header_t* ugc_header);
+fort_gc_release(ugc_t* gc, ugc_header_t* ugc_header);
 
 #endif

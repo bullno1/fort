@@ -68,7 +68,7 @@ fort_gc_alloc(
 }
 
 void
-fort_gc_scan(fort_ctx_t* ctx, void* mem)
+fort_gc_visit_ptr(fort_ctx_t* ctx, void* mem)
 {
 	if(mem == NULL) { return; }
 
@@ -76,9 +76,9 @@ fort_gc_scan(fort_ctx_t* ctx, void* mem)
 }
 
 void
-fort_gc_scan_cell(fort_ctx_t* ctx, fort_cell_t cell)
+fort_gc_visit_cell(fort_ctx_t* ctx, fort_cell_t cell)
 {
-	fort_gc_scan(ctx, fort_gc_get_cell_ref(cell));
+	fort_gc_visit_ptr(ctx, fort_gc_get_cell_ref(cell));
 }
 
 void
@@ -100,13 +100,13 @@ fort_gc_scan_dict(fort_ctx_t* ctx, fort_dict_t* dict)
 {
 	kh_foreach(itr, dict)
 	{
-		fort_gc_scan_cell(ctx, kh_key(dict, itr));
-		fort_gc_scan_cell(ctx, kh_value(dict, itr));
+		fort_gc_visit_cell(ctx, kh_key(dict, itr));
+		fort_gc_visit_cell(ctx, kh_value(dict, itr));
 	}
 }
 
 void
-fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header)
+fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header)
 {
 	if(ugc_header == NULL)
 	{
@@ -116,18 +116,18 @@ fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header)
 		{
 			fort_t* fort = BK_CONTAINER_OF(itr, fort_t, ctx_link);
 
-			fort_gc_scan(ctx, fort->return_to_native);
-			fort_gc_scan(ctx, fort->last_word);
-			fort_gc_scan(ctx, fort->current_word);
+			fort_gc_visit_ptr(ctx, fort->return_to_native);
+			fort_gc_visit_ptr(ctx, fort->last_word);
+			fort_gc_visit_ptr(ctx, fort->current_word);
 
 			bk_array_foreach(fort_cell_t, itr, fort->param_stack)
 			{
-				fort_gc_scan_cell(gc->userdata, *itr);
+				fort_gc_visit_cell(gc->userdata, *itr);
 			}
 
 			bk_array_foreach(fort_stack_frame_t, itr, fort->return_stack)
 			{
-				fort_gc_scan(ctx, (void*)itr->word);
+				fort_gc_visit_ptr(ctx, (void*)itr->word);
 			}
 		}
 	}
@@ -139,12 +139,12 @@ fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header)
 		if(header->type == FORT_TICK || header->type == FORT_XT)
 		{
 			fort_word_t* word = body;
-			fort_gc_scan(gc->userdata, word->name);
+			fort_gc_visit_ptr(gc->userdata, word->name);
 			if(word->data != NULL)
 			{
 				bk_array_foreach(fort_cell_t, itr, word->data)
 				{
-					fort_gc_scan_cell(gc->userdata, *itr);
+					fort_gc_visit_cell(gc->userdata, *itr);
 				}
 			}
 		}
@@ -152,7 +152,7 @@ fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header)
 }
 
 void
-fort_gc_release_internal(ugc_t* gc, ugc_header_t* ugc_header)
+fort_gc_release(ugc_t* gc, ugc_header_t* ugc_header)
 {
 	fort_gc_header_t* header = BK_CONTAINER_OF(ugc_header, fort_gc_header_t, ugc);
 	fort_ctx_t* ctx = gc->userdata;

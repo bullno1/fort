@@ -67,7 +67,7 @@ fort_err_t
 fort_strpool_alloc(
 	fort_ctx_t* ctx,
 	fort_string_ref_t ref,
-	const fort_string_t** strp
+	fort_string_t** strp
 )
 {
 	FORT_ASSERT(ref.length <= INT_MAX, FORT_ERR_OOM);
@@ -113,12 +113,12 @@ fort_strpool_alloc(
 }
 
 fort_err_t
-fort_strpool_release(fort_ctx_t* ctx, const fort_string_t* str)
+fort_strpool_release(fort_ctx_t* ctx, fort_string_t* str)
 {
 	fort_strpool_entry_t entry = {
 		.hash = XXH32(str->ptr, str->length, (uintptr_t)ctx),
 		.owned = 1,
-		.content = { .str = (fort_string_t*)str }
+		.content = { .str = str }
 	};
 
 	khint_t itr = kh_get(fort_strpool, &ctx->strpool, entry);
@@ -137,7 +137,7 @@ fort_err_t
 fort_strpool_check(
 	fort_ctx_t* ctx,
 	fort_string_ref_t ref,
-	const fort_string_t** strp
+	fort_string_t** strp
 )
 {
 	fort_strpool_entry_t entry = {

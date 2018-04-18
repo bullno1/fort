@@ -79,7 +79,7 @@ fort_end_word(fort_t* fort)
 {
 	fort_cell_t key = {
 		.type = FORT_STRING,
-		.data = { .ref = (fort_string_t*)fort->current_word->name }
+		.data = { .ref = fort->current_word->name }
 	};
 	fort_cell_t value = {
 		.type = FORT_XT,

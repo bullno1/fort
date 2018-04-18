@@ -35,7 +35,7 @@ struct fort_string_s
 
 struct fort_word_s
 {
-	const fort_string_t* name;
+	fort_string_t* name;
 
 	fort_native_fn_t code;
 	BK_ARRAY(fort_cell_t) data;
@@ -101,17 +101,17 @@ fort_err_t
 fort_strpool_alloc(
 	fort_ctx_t* ctx,
 	fort_string_ref_t ref,
-	const fort_string_t** strp
+	fort_string_t** strp
 );
 
 fort_err_t
-fort_strpool_release(fort_ctx_t* ctx, const fort_string_t* str);
+fort_strpool_release(fort_ctx_t* ctx, fort_string_t* str);
 
 fort_err_t
 fort_strpool_check(
 	fort_ctx_t* ctx,
 	fort_string_ref_t ref,
-	const fort_string_t** strp
+	fort_string_t** strp
 );
 
 fort_err_t

@@ -30,11 +30,11 @@ fort_push_real(fort_t* fort, fort_real_t value)
 fort_err_t
 fort_push_string(fort_t* fort, fort_string_ref_t value)
 {
-	const fort_string_t* str;
+	fort_string_t* str;
 	FORT_ENSURE(fort_strpool_alloc(fort->ctx, value, &str));
 	return fort_push(fort, (fort_cell_t){
 		.type = FORT_STRING,
-		.data = { .ref = (fort_string_t*)str }
+		.data = { .ref = str }
 	});
 }
 
@@ -75,7 +75,7 @@ fort_err_t
 fort_as_string(fort_cell_t* cell, fort_string_ref_t* value)
 {
 	FORT_ASSERT(cell->type == FORT_STRING, FORT_ERR_TYPE);
-	const fort_string_t* string = cell->data.ref;
+	fort_string_t* string = cell->data.ref;
 	*value = (fort_string_ref_t){
 		.length = string->length,
 		.ptr = string->ptr,

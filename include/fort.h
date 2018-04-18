@@ -49,8 +49,7 @@ typedef struct fort_token_s fort_token_t;
 	X(FORT_REAL) \
 	X(FORT_STRING) \
 	X(FORT_XT) \
-	X(FORT_TICK) \
-	X(FORT_OBJ)
+	X(FORT_TICK)
 
 BK_ENUM(fort_cell_type_t, FORT_CELL_TYPE)
 

@@ -120,7 +120,7 @@ fort_gc_trace_dict(fort_ctx_t* ctx, fort_dict_t* dict)
 }
 
 void
-fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header)
+fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header)
 {
 	if(ugc_header == NULL)
 	{
@@ -140,7 +140,7 @@ fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header)
 }
 
 void
-fort_gc_release(ugc_t* gc, ugc_header_t* ugc_header)
+fort_gc_release_internal(ugc_t* gc, ugc_header_t* ugc_header)
 {
 	fort_gc_header_t* header = BK_CONTAINER_OF(ugc_header, fort_gc_header_t, ugc);
 	fort_ctx_t* ctx = gc->userdata;

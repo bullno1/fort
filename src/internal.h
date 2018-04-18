@@ -126,9 +126,9 @@ void
 fort_gc_add_cell_ref(fort_ctx_t* ctx, void* src, fort_cell_t dest);
 
 void
-fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header);
+fort_gc_scan_internal(ugc_t* gc, ugc_header_t* ugc_header);
 
 void
-fort_gc_release(ugc_t* gc, ugc_header_t* ugc_header);
+fort_gc_release_internal(ugc_t* gc, ugc_header_t* ugc_header);
 
 #endif

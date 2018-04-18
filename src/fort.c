@@ -12,7 +12,7 @@ fort_create_ctx(const fort_ctx_config_t* config, fort_ctx_t** ctxp)
 	*ctx = (fort_ctx_t){ .config = *config };
 	kh_init(fort_strpool, config->allocator, &ctx->strpool);
 	kh_init(fort_dict, config->allocator, &ctx->dict);
-	ugc_init(&ctx->gc, &fort_gc_scan, fort_gc_release);
+	ugc_init(&ctx->gc, &fort_gc_scan_internal, fort_gc_release_internal);
 	ctx->gc.userdata = ctx;
 
 	fort_reset_ctx(ctx);

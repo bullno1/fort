@@ -240,6 +240,7 @@ fort_return(fort_t* fort, fort_word_t* word)
 	size_t return_stack_depth = bk_array_len(fort->return_stack);
 	FORT_ASSERT(return_stack_depth > 0, FORT_ERR_UNDERFLOW);
 
+	fort->current_frame = fort->return_stack[return_stack_depth - 1];
 	bk_array_resize(fort->return_stack, return_stack_depth - 1);
 
 	return word->data[0].data.integer;

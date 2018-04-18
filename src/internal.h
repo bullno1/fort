@@ -73,6 +73,7 @@ struct fort_s
 	fort_word_t* last_word;
 	fort_word_t* return_to_native;
 	fort_state_t state;
+	fort_stack_frame_t current_frame;
 
 	unsigned compiling: 1;
 };

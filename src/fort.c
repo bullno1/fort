@@ -74,7 +74,7 @@ fort_reset(fort_t* fort)
 }
 
 fort_ctx_t*
-fort_ctx(fort_t* fort)
-{
-	return fort->ctx;
-}
+fort_ctx(fort_t* fort) { return fort->ctx; }
+
+fort_int_t
+fort_state(fort_t* fort) { return fort->compiling; }

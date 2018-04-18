@@ -73,7 +73,7 @@ fort_colon(fort_t* fort, fort_word_t* word)
 	FORT_ASSERT(err != FORT_ERR_NOT_FOUND, FORT_ERR_SYNTAX);
 	FORT_ASSERT(err == FORT_OK, err);
 
-	fort->state.interpreting = 0;
+	fort->compiling = 1;
 
 	return fort_begin_word(fort, name.lexeme, fort_end_colon);
 }
@@ -101,7 +101,7 @@ fort_bracket_open(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort->state.interpreting = 1;
+	fort->compiling = 0;
 	return FORT_OK;
 }
 
@@ -110,7 +110,7 @@ fort_bracket_close(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort->state.interpreting = 0;
+	fort->compiling = 1;
 	return FORT_OK;
 }
 

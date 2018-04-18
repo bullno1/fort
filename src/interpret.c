@@ -70,13 +70,13 @@ fort_outer_interpret(fort_t* fort)
 			return err;
 		}
 
-		if(fort->state.interpreting)
+		if(fort->compiling)
 		{
-			FORT_ENSURE(fort_interpret_token(fort, &token));
+			FORT_ENSURE(fort_compile_token(fort, &token));
 		}
 		else
 		{
-			FORT_ENSURE(fort_compile_token(fort, &token));
+			FORT_ENSURE(fort_interpret_token(fort, &token));
 		}
 	}
 }
@@ -90,8 +90,8 @@ fort_interpret(fort_t* fort, struct bk_file_s* in, fort_string_ref_t filename)
 	fort->state = (fort_state_t) {
 		.input = in,
 		.location = { .line = 1, .column = 0 },
-		.interpreting = 1
 	};
+	fort->compiling = 0;
 
 	fort_err_t err = fort_outer_interpret(fort);
 
@@ -105,10 +105,4 @@ fort_interpret_string(fort_t* fort, fort_string_ref_t str, fort_string_ref_t fil
 	bk_mem_file_t mem_file;
 	bk_file_t* file = bk_mem_fs_wrap_fixed(&mem_file, (char*)str.ptr, str.length);
 	return fort_interpret(fort, file, filename);
-}
-
-fort_int_t
-fort_is_interpreting(fort_t* fort)
-{
-	return (fort_int_t)fort->state.interpreting;
 }

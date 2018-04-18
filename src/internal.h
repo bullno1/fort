@@ -23,8 +23,6 @@ struct fort_state_s
 	struct bk_file_s* input;
 	fort_location_t location;
 	char last_char;
-
-	unsigned interpreting: 1;
 };
 
 struct fort_string_s
@@ -71,6 +69,8 @@ struct fort_s
 	fort_word_t* last_word;
 	fort_word_t* return_to_native;
 	fort_state_t state;
+
+	unsigned compiling: 1;
 };
 
 fort_err_t

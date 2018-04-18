@@ -152,6 +152,9 @@ fort_load_builtins(fort_t* fort);
 FORT_DECL fort_ctx_t*
 fort_ctx(fort_t* fort);
 
+FORT_DECL fort_int_t
+fort_state(fort_t* fort);
+
 /** @} */
 
 /** @defgroup stack
@@ -211,9 +214,6 @@ fort_interpret(fort_t* fort, struct bk_file_s* in, fort_string_ref_t filename);
 
 FORT_DECL fort_err_t
 fort_interpret_string(fort_t* fort, fort_string_ref_t str, fort_string_ref_t filename);
-
-FORT_DECL fort_int_t
-fort_is_interpreting(fort_t* fort);
 
 /** @} */
 

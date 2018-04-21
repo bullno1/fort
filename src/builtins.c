@@ -57,14 +57,6 @@ fort_add(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
-fort_end_colon(fort_t* fort, fort_word_t* word)
-{
-	(void)fort;
-	word->code = &fort_exec_colon;
-	return FORT_OK;
-}
-
-static fort_err_t
 fort_colon(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -76,7 +68,7 @@ fort_colon(fort_t* fort, fort_word_t* word)
 
 	fort->compiling = 1;
 
-	return fort_begin_word(fort, name.lexeme, fort_end_colon);
+	return fort_begin_word(fort, name.lexeme, &fort_exec_colon);
 }
 
 static fort_err_t
@@ -92,7 +84,6 @@ fort_def_end(fort_t* fort, fort_word_t* word)
 	(void)word;
 
 	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_NOT_FOUND);
-	FORT_ENSURE(fort->current_word->code(fort, fort->current_word));
 
 	return fort_end_word(fort);
 }

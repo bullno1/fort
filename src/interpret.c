@@ -27,6 +27,8 @@ fort_interpret_token(fort_t* fort, const fort_token_t* token)
 static fort_err_t
 fort_compile_token(fort_t* fort, const fort_token_t* token)
 {
+	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_NOT_FOUND);
+
 	fort_word_t* word = fort_find_internal(fort->ctx, token->lexeme);
 	if(word == NULL)
 	{
@@ -35,7 +37,9 @@ fort_compile_token(fort_t* fort, const fort_token_t* token)
 		fort_err_t err = fort_parse_number(token->lexeme, &value);
 		FORT_ASSERT(err == FORT_OK, FORT_ERR_NOT_FOUND);
 
-		return fort_compile_internal(fort, value);
+		return fort_push_word_data_internal(
+			fort->ctx, fort->current_word, value
+		);
 	}
 	else
 	{
@@ -45,10 +49,11 @@ fort_compile_token(fort_t* fort, const fort_token_t* token)
 		}
 		else
 		{
-			return fort_compile_internal(fort, (fort_cell_t){
+			fort_cell_t cell = {
 				.type = FORT_XT,
 				.data = { .ref = word }
-			});
+			};
+			return fort_push_word_data_internal(fort->ctx, fort->current_word, cell);
 		}
 	}
 }
@@ -70,7 +75,7 @@ fort_outer_interpret(fort_t* fort)
 			return err;
 		}
 
-		if(fort->compiling)
+		if(fort->state == FORT_STATE_COMPILING)
 		{
 			FORT_ENSURE(fort_compile_token(fort, &token));
 		}
@@ -87,11 +92,11 @@ fort_interpret(fort_t* fort, struct bk_file_s* in, fort_string_ref_t filename)
 	(void)filename;
 	fort_state_t state = fort->state;
 
-	fort->state = (fort_state_t) {
+	fort->input_state = (fort_input_state_t) {
 		.input = in,
 		.location = { .line = 1, .column = 0 },
 	};
-	fort->compiling = 0;
+	fort->state = FORT_STATE_INTERPRETING;
 
 	fort_err_t err = fort_outer_interpret(fort);
 

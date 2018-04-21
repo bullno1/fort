@@ -41,6 +41,17 @@ fort_push_stack_frame(fort_t* fort, fort_word_t* word)
 }
 
 fort_err_t
+fort_execute(fort_t* fort)
+{
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	// TODO: pin cell in case of gc
+	FORT_ENSURE(fort_ndrop(fort, 1));
+
+	return fort_exec_cell(fort, *cell);
+}
+
+fort_err_t
 fort_exec_colon(fort_t* fort, fort_word_t* word)
 {
 	int top_is_native = fort->current_frame.word == NULL;

@@ -5,45 +5,39 @@ number(const MunitParameter params[], void* fixture_)
 {
 	(void)params;
 	fixture_t* fixture = fixture_;
-	fort_cell_t value;
-
-	fort_push_integer(fixture->fort1, 42);
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &value));
-	munit_assert_enum(fort_cell_type_t, FORT_INTEGER, ==, value.type);
-	munit_assert_int64(42, ==, value.data.integer);
+	fort_cell_type_t type;
+	fort_int_t int_val;
+	fort_real_t real_val;
 
 	munit_assert_enum(
 		fort_err_t,
 		FORT_OK,
 		==,
 		fort_interpret_string(
-			fixture->fort2,
+			fixture->fort1,
 			FORT_STRING_REF("42"),
 			FORT_STRING_REF(__FILE__)
 		)
 	);
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &value));
-	munit_assert_enum(fort_cell_type_t, FORT_INTEGER, ==, value.type);
-	munit_assert_int64(42, ==, value.data.integer);
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_get_type(fixture->fort1, 0, &type));
+	munit_assert_enum(fort_cell_type_t, FORT_INTEGER, ==, type);
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_as_integer(fixture->fort1, 0, &int_val));
+	munit_assert_int64(42, ==, int_val);
 
-	munit_assert_int64(1, ==, fort_stack_size(fixture->fort1));
-	munit_assert_int64(1, ==, fort_stack_size(fixture->fort2));
-
-
-	fort_assert_stack_equal(fixture->fort1, fixture->fort2);
-
-	fort_push_real(fixture->fort1, -42.5);
 	munit_assert_enum(
 		fort_err_t,
 		FORT_OK,
 		==,
 		fort_interpret_string(
-			fixture->fort2,
+			fixture->fort1,
 			FORT_STRING_REF("-42.5"),
 			FORT_STRING_REF(__FILE__)
 		)
 	);
-	fort_assert_stack_equal(fixture->fort1, fixture->fort2);
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_get_type(fixture->fort1, 0, &type));
+	munit_assert_enum(fort_cell_type_t, FORT_REAL, ==, type);
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_as_real(fixture->fort1, 0, &real_val));
+	munit_assert_double(-42.5, ==, real_val);
 
 	return MUNIT_OK;
 }
@@ -78,10 +72,8 @@ string(const MunitParameter params[], void* fixture_)
 		)
 	);
 
-	fort_cell_t top;
 	fort_string_ref_t str;
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &top));
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_as_string(&top, &str));
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_as_string(fixture->fort1, 0, &str));
 	munit_assert_string_equal("hello world", str.ptr);
 
 	munit_assert_enum(
@@ -93,8 +85,8 @@ string(const MunitParameter params[], void* fixture_)
 			FORT_STRING_REF(__FILE__)
 		)
 	);
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_peek(fixture->fort1, 0, &top));
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_as_string(&top, &str));
+
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_as_string(fixture->fort1, 0, &str));
 	munit_assert_string_equal("hello world ", str.ptr);
 
 	return MUNIT_OK;

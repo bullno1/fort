@@ -117,7 +117,6 @@ fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header)
 			fort_t* fort = BK_CONTAINER_OF(itr, fort_t, ctx_link);
 
 			fort_gc_visit_ptr(ctx, fort->return_to_native);
-			fort_gc_visit_ptr(ctx, fort->last_word);
 			fort_gc_visit_ptr(ctx, fort->current_word);
 
 			bk_array_foreach(fort_cell_t, itr, fort->param_stack)

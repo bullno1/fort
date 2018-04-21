@@ -32,7 +32,6 @@ struct bk_file_s;
 
 typedef FORT_REAL_TYPE fort_real_t;
 typedef FORT_INT_TYPE fort_int_t;
-typedef struct fort_cell_s fort_cell_t;
 typedef struct fort_string_ref_s fort_string_ref_t;
 typedef struct fort_s fort_t;
 typedef struct fort_ctx_s fort_ctx_t;
@@ -76,17 +75,11 @@ BK_ENUM(fort_err_t, FORT_ERR)
 
 BK_ENUM(fort_gc_op_t, FORT_GC_OP)
 
-struct fort_cell_s
-{
-	fort_cell_type_t type;
+#define FORT_STATE(X) \
+	X(FORT_STATE_INTERPRETING) \
+	X(FORT_STATE_COMPILING)
 
-	union
-	{
-		fort_int_t integer;
-		fort_real_t real;
-		void* ref;
-	} data;
-};
+BK_ENUM(fort_state_t, FORT_STATE)
 
 struct fort_location_s
 {
@@ -150,10 +143,13 @@ FORT_DECL fort_err_t
 fort_load_builtins(fort_t* fort);
 
 FORT_DECL fort_ctx_t*
-fort_ctx(fort_t* fort);
+fort_get_ctx(fort_t* fort);
 
-FORT_DECL fort_int_t
-fort_state(fort_t* fort);
+FORT_DECL fort_state_t
+fort_get_state(fort_t* fort);
+
+FORT_DECL void
+fort_set_state(fort_t* fort, fort_state_t state);
 
 /** @} */
 
@@ -174,22 +170,31 @@ FORT_DECL fort_err_t
 fort_ndrop(fort_t* fort, fort_int_t count);
 
 FORT_DECL fort_err_t
-fort_as_string(fort_cell_t* cell, fort_string_ref_t* value);
+fort_pick(fort_t* fort, fort_int_t index);
 
 FORT_DECL fort_err_t
-fort_as_int(fort_cell_t* cell, fort_int_t* value);
+fort_roll(fort_t* fort, fort_int_t n);
 
 FORT_DECL fort_err_t
-fort_as_real(fort_cell_t* cell, fort_real_t* value);
+fort_move(fort_t* fort, fort_int_t src, fort_int_t dst);
 
 FORT_DECL fort_err_t
-fort_peek(fort_t* fort, fort_int_t index, fort_cell_t* value);
-
-FORT_DECL fort_err_t
-fort_put(fort_t* fort, fort_int_t index, fort_cell_t* value);
+fort_xmove(fort_t* src_fort, fort_t* dst_fort, fort_int_t index);
 
 FORT_DECL fort_int_t
-fort_stack_size(fort_t* fort);
+fort_get_stack_size(fort_t* fort);
+
+FORT_DECL fort_err_t
+fort_get_type(fort_t* fort, fort_int_t index, fort_cell_type_t* typep);
+
+FORT_DECL fort_err_t
+fort_as_string(fort_t* fort, fort_int_t index, fort_string_ref_t* value);
+
+FORT_DECL fort_err_t
+fort_as_integer(fort_t* fort, fort_int_t index, fort_int_t* value);
+
+FORT_DECL fort_err_t
+fort_as_real(fort_t* fort, fort_int_t index, fort_real_t* value);
 
 /** @} */
 
@@ -205,7 +210,7 @@ fort_next_char(fort_t* fort, char* ch);
 
 /** @} */
 
-/** @defgroup interpret
+/** @defgroup exec
  *  @{
  */
 
@@ -214,6 +219,55 @@ fort_interpret(fort_t* fort, struct bk_file_s* in, fort_string_ref_t filename);
 
 FORT_DECL fort_err_t
 fort_interpret_string(fort_t* fort, fort_string_ref_t str, fort_string_ref_t filename);
+
+FORT_DECL fort_err_t
+fort_execute(fort_t* fort);
+
+/** @} */
+
+/** @defgroup dict
+ *  @{
+ */
+
+FORT_DECL fort_err_t
+fort_create_word(
+	fort_ctx_t* ctx, fort_string_ref_t name, fort_native_fn_t code,
+	unsigned immediate, unsigned compile_only
+);
+
+FORT_DECL fort_err_t
+fort_create_unnamed_word(fort_t* fort, fort_native_fn_t code);
+
+FORT_DECL fort_err_t
+fort_find(fort_t* fort, fort_string_ref_t name);
+
+FORT_DECL fort_err_t
+fort_get_word_data(fort_t* fort, fort_word_t* word, fort_int_t index);
+
+FORT_DECL fort_err_t
+fort_set_word_data(
+	fort_t* fort, fort_word_t* word, fort_int_t index, fort_int_t value
+);
+
+FORT_DECL fort_err_t
+fort_delete_word_data(
+	fort_t* fort, fort_word_t* word, fort_int_t index, fort_int_t n
+);
+
+FORT_DECL fort_err_t
+fort_push_word_data(fort_t* fort, fort_word_t* word, fort_int_t value);
+
+/** @} */
+
+/** @defgroup serialization
+ *  @{
+ */
+
+FORT_DECL fort_err_t
+fort_save_image(fort_ctx_t* ctx, struct bk_file_s* output);
+
+FORT_DECL fort_err_t
+fort_load_image(fort_ctx_t* ctx, struct bk_file_s* input);
 
 /** @} */
 

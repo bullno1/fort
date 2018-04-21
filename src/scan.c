@@ -40,7 +40,7 @@ fort_next_char(fort_t* fort, char* ch)
 {
 	size_t len = 1;
 	char current_char;
-	fort_state_t* state = &fort->state;
+	fort_input_state_t* state = &fort->input_state;
 
 	int err = bk_fread(state->input, &current_char, &len);
 
@@ -98,8 +98,8 @@ fort_next_token(fort_t* fort, fort_token_t* token)
 		else
 		{
 			bk_array_push(fort->scan_buf, ch);
-			token_start = fort->state.location;
-			token_end = fort->state.location;
+			token_start = fort->input_state.location;
+			token_end = fort->input_state.location;
 			break;
 		}
 	}
@@ -124,7 +124,7 @@ fort_next_token(fort_t* fort, fort_token_t* token)
 		else
 		{
 			bk_array_push(fort->scan_buf, ch);
-			token_end = fort->state.location;
+			token_end = fort->input_state.location;
 		}
 	}
 

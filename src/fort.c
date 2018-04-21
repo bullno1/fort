@@ -51,7 +51,8 @@ fort_create(fort_ctx_t* ctx, const fort_config_t* config, fort_t** fortp)
 		.ctx = ctx,
 		.param_stack = bk_array_create(ctx->config.allocator, fort_cell_t, 16),
 		.return_stack = bk_array_create(ctx->config.allocator, fort_stack_frame_t, 16),
-		.scan_buf = bk_array_create(ctx->config.allocator, char, 16)
+		.scan_buf = bk_array_create(ctx->config.allocator, char, 16),
+		.state = FORT_STATE_INTERPRETING
 	};
 
 	bk_dlist_append(&ctx->forts, &fort->ctx_link);
@@ -79,7 +80,10 @@ fort_reset(fort_t* fort)
 }
 
 fort_ctx_t*
-fort_ctx(fort_t* fort) { return fort->ctx; }
+fort_get_ctx(fort_t* fort) { return fort->ctx; }
 
-fort_int_t
-fort_state(fort_t* fort) { return fort->compiling; }
+fort_state_t
+fort_get_state(fort_t* fort) { return fort->state; }
+
+void
+fort_set_state(fort_t* fort, fort_state_t state) { fort->state = state; }

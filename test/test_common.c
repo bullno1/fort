@@ -3,19 +3,24 @@
 void
 fort_assert_stack_equal(fort_t* fort1, fort_t* fort2)
 {
-	fort_int_t stack_size1 = fort_stack_size(fort1);
-	fort_int_t stack_size2 = fort_stack_size(fort2);
+	fort_int_t stack_size1 = fort_get_stack_size(fort1);
+	fort_int_t stack_size2 = fort_get_stack_size(fort2);
 	munit_assert_int64(stack_size1, ==, stack_size2);
 
 	for(fort_int_t i = 0; i < stack_size1; ++i)
 	{
-		fort_cell_t value1, value2;
+		fort_cell_type_t type1, type2;
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_get_type(fort1, i, &type1));
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_get_type(fort2, i, &type2));
+		munit_assert_enum(fort_cell_type_t, type1, ==, type2);
 
-		fort_peek(fort1, i, &value1);
-		fort_peek(fort2, i, &value2);
-
-		munit_assert_enum(fort_cell_type_t, value1.type, ==, value2.type);
-		munit_assert_memory_equal(sizeof(fort_cell_t), &value1, &value2);
+		fort_int_t cmp;
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_xmove(fort1, fort2, i));
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_pick(fort2, i + 1));
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_find(fort2, FORT_STRING_REF("=")));
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_execute(fort2));
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_pop_integer(fort2, &cmp));
+		munit_assert_int64(1, ==, cmp);
 	}
 }
 
@@ -37,9 +42,9 @@ setup_fixture(const MunitParameter params[], void* userdata)
 	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create_ctx(&fort_ctx_cfg, &fixture->ctx));
 	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create(fixture->ctx, &fort_cfg, &fixture->fort1));
 	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create(fixture->ctx, &fort_cfg, &fixture->fort2));
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_load_builtins(fixture->fort1));
-	munit_assert_int64(0, ==, fort_stack_size(fixture->fort1));
-	munit_assert_int64(0, ==, fort_stack_size(fixture->fort2));
+	/*munit_assert_enum(fort_err_t, FORT_OK, ==, fort_load_builtins(fixture->fort1));*/
+	munit_assert_int64(0, ==, fort_get_stack_size(fixture->fort1));
+	munit_assert_int64(0, ==, fort_get_stack_size(fixture->fort2));
 
 	return fixture;
 }

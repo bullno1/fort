@@ -33,7 +33,7 @@ static void
 teardown(void* fixture)
 {
 	fort_t* fort = fixture;
-	fort_ctx_t* ctx = fort_ctx(fort);
+	fort_ctx_t* ctx = fort_get_ctx(fort);
 	fort_destroy(fort);
 	fort_destroy_ctx(ctx);
 }
@@ -63,8 +63,8 @@ next_token(const MunitParameter params[], void* fixture)
 
 	bk_mem_file_t mem_file;
 	bk_file_t* file = bk_mem_fs_wrap_fixed(&mem_file, input, strlen(input));
-	fort->state.input = file;
-	fort->state.location = (fort_location_t){
+	fort->input_state.input = file;
+	fort->input_state.location = (fort_location_t){
 		.line = 1, .column = 0
 	};
 

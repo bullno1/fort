@@ -8,10 +8,11 @@
 #define XXH_NAMESPACE fort_
 #include <xxHash/xxhash.h>
 
-typedef struct fort_state_s fort_state_t;
+typedef struct fort_input_state_s fort_input_state_t;
 typedef struct fort_stack_frame_s fort_stack_frame_t;
 typedef struct fort_string_s fort_string_t;
 typedef struct fort_strpool_entry_s fort_strpool_entry_t;
+typedef struct fort_cell_s fort_cell_t;
 
 KHASH_DECLARE(fort_strpool, fort_strpool_entry_t, char)
 typedef khash_t(fort_strpool) fort_strpool_t;
@@ -19,7 +20,19 @@ typedef khash_t(fort_strpool) fort_strpool_t;
 KHASH_DECLARE(fort_dict, fort_cell_t, fort_cell_t)
 typedef khash_t(fort_dict) fort_dict_t;
 
-struct fort_state_s
+struct fort_cell_s
+{
+	fort_cell_type_t type;
+
+	union
+	{
+		fort_int_t integer;
+		fort_real_t real;
+		void* ref;
+	} data;
+};
+
+struct fort_input_state_s
 {
 	struct bk_file_s* input;
 	fort_location_t location;
@@ -70,37 +83,53 @@ struct fort_s
 	BK_ARRAY(fort_stack_frame_t) return_stack;
 	BK_ARRAY(char) scan_buf;
 	fort_word_t* current_word;
-	fort_word_t* last_word;
 	fort_word_t* return_to_native;
-	fort_state_t state;
+	fort_input_state_t input_state;
 	fort_stack_frame_t current_frame;
-
-	unsigned compiling: 1;
+	fort_state_t state;
 };
+
+// parse
 
 fort_err_t
 fort_parse_number(fort_string_ref_t string, fort_cell_t* value);
 
+// stack
+
 fort_err_t
 fort_push(fort_t* fort, fort_cell_t value);
 
+fort_err_t
+fort_stack_address(fort_t* fort, fort_int_t index, fort_cell_t** cellp);
+
+// dict
+
 fort_word_t*
 fort_find_internal(fort_ctx_t* ctx, fort_string_ref_t name);
-
-fort_err_t
-fort_begin_word(fort_t* fort, fort_string_ref_t name, fort_native_fn_t code);
-
-fort_err_t
-fort_end_word(fort_t* fort);
 
 void
 fort_reset_dict(fort_ctx_t* ctx);
 
 fort_err_t
-fort_compile_internal(fort_t* fort, fort_cell_t cell);
+fort_push_word_data_internal(
+	fort_ctx_t* ctx, fort_word_t* word, fort_cell_t value
+);
+
+fort_err_t
+fort_begin_word(
+	fort_ctx_t* ctx,
+	fort_string_ref_t name,
+	fort_native_fn_t code,
+	fort_word_t** wordp
+);
+
+fort_err_t
+fort_end_word(fort_ctx_t* ctx, fort_word_t* word);
 
 fort_err_t
 fort_exec_colon(fort_t* fort, fort_word_t* word);
+
+// strpool
 
 fort_err_t
 fort_strpool_alloc(
@@ -118,6 +147,8 @@ fort_strpool_check(
 	fort_string_ref_t ref,
 	fort_string_t** strp
 );
+
+// gc
 
 fort_err_t
 fort_gc_alloc(

@@ -20,19 +20,23 @@ fort_promote_int_to_real(fort_cell_t* cell)
 static fort_err_t
 fort_numeric_2pop(fort_t* fort, fort_cell_t* lhs, fort_cell_t* rhs)
 {
-	FORT_ENSURE(fort_peek(fort, 0, rhs));
-	FORT_ENSURE(fort_peek(fort, 1, lhs));
+	fort_cell_t *lhsp, *rhsp;
+	FORT_ENSURE(fort_stack_address(fort, 0, &rhsp));
+	FORT_ENSURE(fort_stack_address(fort, 1, &lhsp));
 
 	FORT_ASSERT(
-		fort_is_numeric(lhs->type) && fort_is_numeric(rhs->type),
+		fort_is_numeric(lhsp->type) && fort_is_numeric(rhsp->type),
 		FORT_ERR_TYPE
 	);
 
-	if(lhs->type != FORT_INTEGER || rhs->type != FORT_INTEGER)
+	if(lhsp->type != FORT_INTEGER || rhsp->type != FORT_INTEGER)
 	{
-		if(lhs->type == FORT_INTEGER) { fort_promote_int_to_real(lhs); }
-		if(rhs->type == FORT_INTEGER) { fort_promote_int_to_real(rhs); }
+		if(lhsp->type == FORT_INTEGER) { fort_promote_int_to_real(lhsp); }
+		if(rhsp->type == FORT_INTEGER) { fort_promote_int_to_real(rhsp); }
 	}
+
+	*lhs = *lhsp;
+	*rhs = *rhsp;
 
 	return fort_ndrop(fort, 2);
 }
@@ -66,16 +70,11 @@ fort_colon(fort_t* fort, fort_word_t* word)
 	FORT_ASSERT(err != FORT_ERR_NOT_FOUND, FORT_ERR_SYNTAX);
 	FORT_ASSERT(err == FORT_OK, err);
 
-	fort->compiling = 1;
+	fort->state = FORT_STATE_COMPILING;
 
-	return fort_begin_word(fort, name.lexeme, &fort_exec_colon);
-}
-
-static fort_err_t
-fort_last_word(fort_t* fort, fort_word_t** wordp)
-{
-	*wordp = fort->current_word != NULL ? fort->current_word : fort->last_word;
-	return *wordp != NULL ? FORT_OK : FORT_ERR_NOT_FOUND;
+	return fort_begin_word(
+		fort->ctx, name.lexeme, &fort_exec_colon, &fort->current_word
+	);
 }
 
 static fort_err_t
@@ -84,8 +83,10 @@ fort_def_end(fort_t* fort, fort_word_t* word)
 	(void)word;
 
 	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_NOT_FOUND);
+	FORT_ENSURE(fort_end_word(fort->ctx, fort->current_word));
+	fort->current_word = NULL;
 
-	return fort_end_word(fort);
+	return FORT_OK;
 }
 
 static fort_err_t
@@ -93,7 +94,7 @@ fort_bracket_open(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort->compiling = 0;
+	fort_set_state(fort, FORT_STATE_INTERPRETING);
 	return FORT_OK;
 }
 
@@ -102,7 +103,7 @@ fort_bracket_close(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort->compiling = 1;
+	fort_set_state(fort, FORT_STATE_COMPILING);
 	return FORT_OK;
 }
 
@@ -110,10 +111,9 @@ static fort_err_t
 fort_immediate(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
-	fort_word_t* last_word;
-	FORT_ENSURE(fort_last_word(fort, &last_word));
 
-	last_word->immediate = 1;
+	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_NOT_FOUND);
+	fort->current_word->immediate = 1;
 
 	return FORT_OK;
 }
@@ -123,9 +123,8 @@ fort_compile_only(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort_word_t* last_word;
-	FORT_ENSURE(fort_last_word(fort, &last_word));
-	last_word->compile_only = 1;
+	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_NOT_FOUND);
+	fort->current_word->compile_only = 1;
 
 	return FORT_OK;
 }
@@ -133,6 +132,8 @@ fort_compile_only(fort_t* fort, fort_word_t* word)
 static fort_err_t
 fort_tick(fort_t* fort, fort_word_t* word)
 {
+	(void)word;
+
 	fort_token_t token;
 	fort_err_t err = fort_next_token(fort, &token);
 	FORT_ASSERT(err != FORT_ERR_NOT_FOUND, FORT_ERR_SYNTAX);
@@ -154,7 +155,7 @@ fort_tick(fort_t* fort, fort_word_t* word)
 	else
 	{
 		return fort_push(fort, (fort_cell_t){
-			.type = word->data[0].data.integer,
+			.type = FORT_XT,
 			.data = { .ref = ticked_word }
 		});
 	}
@@ -217,9 +218,9 @@ fort_compile(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort_cell_t cell;
-	FORT_ENSURE(fort_peek(fort, 0, &cell));
-	FORT_ENSURE(fort_compile_internal(fort, cell));
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	FORT_ENSURE(fort_push_word_data_internal(fort->ctx, word, *cell));
 
 	return fort_ndrop(fort, 1);
 }
@@ -228,71 +229,26 @@ static fort_err_t
 fort_return(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
-
-	size_t return_stack_depth = bk_array_len(fort->return_stack);
-	FORT_ASSERT(return_stack_depth > 0, FORT_ERR_UNDERFLOW);
-
-	fort->current_frame = fort->return_stack[return_stack_depth - 1];
-	bk_array_resize(fort->return_stack, return_stack_depth - 1);
-
-	return word->data[0].data.integer;
-}
-
-static fort_err_t
-fort_make_free_word(
-	fort_t* fort,
-	fort_string_ref_t name,
-	fort_native_fn_t code,
-	unsigned immediate, unsigned compile_only
-)
-{
-	FORT_ENSURE(fort_begin_word(fort, name, code));
-
-	fort->current_word->immediate = immediate;
-	fort->current_word->compile_only = compile_only;
-
-	return fort_end_word(fort);
-}
-
-static fort_err_t
-fort_make_closed_word(
-	fort_t* fort,
-	fort_string_ref_t name,
-	fort_native_fn_t code,
-	fort_int_t data,
-	unsigned immediate, unsigned compile_only
-)
-{
-	FORT_ENSURE(fort_begin_word(fort, name, code));
-
-	FORT_ENSURE(fort_compile_internal(fort, (fort_cell_t){
-		.type = FORT_INTEGER,
-		.data = { .integer = data }
-	}));
-
-	fort->current_word->immediate = immediate;
-	fort->current_word->compile_only = compile_only;
-
-	return fort_end_word(fort);
+	fort_int_t code;
+	FORT_ENSURE(fort_pop_integer(fort, &code));
+	return code;
 }
 
 fort_err_t
 fort_load_builtins(fort_t* fort)
 {
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("+"), &fort_add, 0, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("["), &fort_bracket_open, 1, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("]"), &fort_bracket_close, 0, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("immediate"), &fort_immediate, 1, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("compile-only"), &fort_compile_only, 1, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("compile"), &fort_compile, 0, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF(":"), &fort_colon, 0, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("def-end"), &fort_def_end, 0, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("scan-until-char"), &fort_scan_until_char, 0, 0));
-	FORT_ENSURE(fort_make_free_word(fort, FORT_STRING_REF("next-char"), &fort_get_next_char, 0, 0));
-	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("exit"), &fort_return, FORT_OK, 0, 0));
-	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("switch"), &fort_return, FORT_SWITCH, 0, 0));
-	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("'"), &fort_tick, FORT_XT, 0, 0));
-	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("[']"), &fort_tick, FORT_TICK, 1, 1));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("+"), &fort_add, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("["), &fort_bracket_open, 1, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("]"), &fort_bracket_close, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("immediate"), &fort_immediate, 1, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile-only"), &fort_compile_only, 1, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile"), &fort_compile, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(":"), &fort_colon, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("def-end"), &fort_def_end, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("scan-until-char"), &fort_scan_until_char, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("next-char"), &fort_get_next_char, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(return)"), &fort_return, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("'"), &fort_tick, 0, 0));
 
 	fort_string_ref_t core = {
 		.ptr = (void*)fort_builtins_fs_data,

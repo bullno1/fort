@@ -2,6 +2,7 @@
 #include <bk/assert.h>
 #include <bk/array.h>
 #include <fort/utils.h>
+#include "builtins_fs.h"
 
 static int
 fort_is_numeric(fort_cell_type_t type)
@@ -302,13 +303,10 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("'"), &fort_tick, FORT_XT, 0, 0));
 	FORT_ENSURE(fort_make_closed_word(fort, FORT_STRING_REF("[']"), &fort_tick, FORT_TICK, 1, 1));
 
-	fort_string_ref_t core = FORT_STRING_REF(
-		": ; immediate compile-only ['] exit [ compile ] compile def-end [ ' [ compile ] exit [ def-end\n"
-		": return-to-native switch [ def-end\n"
-		": c immediate next-char ;\n"
-		": [compile] immediate compile-only compile ;\n"
-		": \" c \" [compile] scan-until-char ;\n"
-	);
+	fort_string_ref_t core = {
+		.ptr = (void*)fort_builtins_fs_data,
+		.length = fort_builtins_fs_size
+	};
 	FORT_ENSURE(fort_interpret_string(fort, core, FORT_STRING_REF("<core>")));
 
 	return FORT_OK;

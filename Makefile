@@ -1,4 +1,4 @@
-.PHONY: test all clean
+.PHONY: test all clean src/builtins_fs.h
 
 CFLAGS += \
 		  -I include \
@@ -15,7 +15,7 @@ CFLAGS += \
 		  -Wno-missing-field-initializers
 
 TEST_SOURCES = $(shell find test -name '*.c')
-FORT_SOURCES = $(shell find src -name '*.c')
+FORT_SOURCES = $(shell find src -name '*.c') src/builtins_fs.h
 REPL_SOURCES = fort.c
 
 all: test bin/fort
@@ -42,6 +42,9 @@ bin/fort.so: $(FORT_SOURCES) | bin
 		-fvisibility=hidden \
 		-o $@ \
 		$^
+
+src/builtins_fs.h: src/builtins.fs
+	tools/incbin.bat src/builtins.fs src/builtins_fs.h fort_builtins_fs
 
 bin:
 	mkdir -p bin

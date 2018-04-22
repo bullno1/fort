@@ -39,9 +39,8 @@ bin/fort.so: $(FORT_SOURCES) | bin
 		-DFORT_BUILD=1 \
 		-fPIC \
 		-shared \
-		-fvisibility=hidden \
-		-o $@ \
-		$^
+		$(filter %.c %.s,$^) \
+		-o $@
 
 src/builtins_fs.h: src/builtins.fs
 	tools/incbin.bat src/builtins.fs src/builtins_fs.h fort_builtins_fs

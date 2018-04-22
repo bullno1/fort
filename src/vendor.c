@@ -3,11 +3,8 @@
 #include <bk/array.h>
 #include <bk/allocator.h>
 #include <bk/fs/mem.h>
-#include <bk/assert.h>
+#include <bk/printf.h>
 #endif
 
 #define UGC_IMPLEMENTATION
 #include <ugc/ugc.h>
-
-#define XXH_NAMESPACE fort_
-#include <xxHash/xxhash.c>

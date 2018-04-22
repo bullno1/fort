@@ -2,6 +2,9 @@
 #include <limits.h>
 #include <bk/allocator.h>
 #include <fort/utils.h>
+#define XXH_PRIVATE_API
+#define XXH_NAMESPACE fort_
+#include <xxHash/xxhash.h>
 
 struct fort_string_align_helper_s
 {
@@ -70,6 +73,12 @@ fort_strpool_alloc(
 	fort_string_t** strp
 )
 {
+	if(ref.length == 0)
+	{
+		*strp = NULL;
+		return FORT_OK;
+	}
+
 	FORT_ASSERT(ref.length <= INT_MAX, FORT_ERR_OOM);
 
 	fort_strpool_entry_t entry = {

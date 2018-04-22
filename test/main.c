@@ -5,6 +5,7 @@
 #define TEST_SUITES(X) \
 	X(scan) \
 	X(stack) \
+	X(strpool) \
 	X(interpret) \
 	X(stack) \
 	X(compile)

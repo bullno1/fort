@@ -59,12 +59,29 @@ next_token(const MunitParameter params[], void* fixture)
 	return MUNIT_OK;
 }
 
+static MunitResult
+next_char(const MunitParameter params[], void* fixture_)
+{
+	(void)params;
+	fixture_t* fixture = fixture_;
+
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "next-char *");
+
+	return MUNIT_OK;
+}
+
 static MunitTest tests[] = {
 	{
 		.name = "/next_token",
 		.test = next_token,
 		.setup = setup_fort,
 		.tear_down = teardown_fort
+	},
+	{
+		.name = "/next_char",
+		.test = next_char,
+		.setup = setup_fixture,
+		.tear_down = teardown_fixture
 	},
 	{ 0 }
 };

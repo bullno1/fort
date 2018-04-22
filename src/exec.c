@@ -58,14 +58,7 @@ fort_exec_colon(fort_t* fort, fort_word_t* word)
 
 	if(top_is_native)
 	{
-		if(fort->return_to_native == NULL)
-		{
-			fort->return_to_native = fort_find_internal(
-				fort->ctx, FORT_STRING_REF("return-to-native")
-			);
-			FORT_ASSERT(fort->return_to_native != NULL, FORT_ERR_NOT_FOUND);
-		}
-		fort_push_stack_frame(fort, fort->return_to_native);
+		fort_push_stack_frame(fort, fort->ctx->switch_);
 	}
 
 	fort_push_stack_frame(fort, word);
@@ -81,4 +74,19 @@ fort_exec_colon(fort_t* fort, fort_word_t* word)
 	{
 		return FORT_OK;
 	}
+}
+
+fort_err_t
+fort_return(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	size_t return_stack_depth = bk_array_len(fort->return_stack);
+	FORT_ASSERT(return_stack_depth > 0, FORT_ERR_UNDERFLOW);
+
+	fort->current_frame = fort->return_stack[return_stack_depth - 1];
+	bk_array_resize(fort->return_stack, return_stack_depth - 1);
+
+	FORT_ASSERT(word->data != NULL && bk_array_len(word->data) >= 1, FORT_ERR_OVERFLOW);
+	return word->data[0].data.integer;
 }

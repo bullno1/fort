@@ -2,11 +2,19 @@
 #include <bk/array.h>
 #include <bk/allocator.h>
 #include <fort/utils.h>
+#define XXH_PRIVATE_API
+#define XXH_NAMESPACE fort_
+#include <xxHash/xxhash.h>
 
 BK_INLINE khint_t
 fort_cell_hash(fort_cell_t cell)
 {
-	return XXH32(&cell, sizeof(cell), __LINE__);
+	// Hash type and data separately because there can be padding junk in between
+	XXH32_state_t state;
+	XXH32_reset(&state, __LINE__);
+	XXH32_update(&state, &cell.type, sizeof(cell.type));
+	XXH32_update(&state, &cell.data, sizeof(cell.data));
+	return XXH32_digest(&state);
 }
 
 BK_INLINE khint_t

@@ -5,8 +5,6 @@
 #include <ugc/ugc.h>
 #include <bk/dlist.h>
 #include "vendor/khash.h"
-#define XXH_NAMESPACE fort_
-#include <xxHash/xxhash.h>
 
 typedef struct fort_input_state_s fort_input_state_t;
 typedef struct fort_stack_frame_s fort_stack_frame_t;
@@ -71,6 +69,8 @@ struct fort_ctx_s
 	fort_dict_t dict;
 	fort_strpool_t strpool;
 	bk_dlist_link_t forts;
+	fort_word_t* exit;
+	fort_word_t* switch_;
 };
 
 struct fort_s
@@ -83,7 +83,6 @@ struct fort_s
 	BK_ARRAY(fort_stack_frame_t) return_stack;
 	BK_ARRAY(char) scan_buf;
 	fort_word_t* current_word;
-	fort_word_t* return_to_native;
 	fort_input_state_t input_state;
 	fort_stack_frame_t current_frame;
 	fort_state_t state;
@@ -126,8 +125,13 @@ fort_begin_word(
 fort_err_t
 fort_end_word(fort_ctx_t* ctx, fort_word_t* word);
 
+// exec
+
 fort_err_t
 fort_exec_colon(fort_t* fort, fort_word_t* word);
+
+fort_err_t
+fort_return(fort_t* fort, fort_word_t* word);
 
 // strpool
 

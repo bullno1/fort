@@ -1,8 +1,15 @@
 #include "internal.h"
 #include <bk/assert.h>
 #include <bk/array.h>
+#include <bk/printf.h>
 #include <fort/utils.h>
 #include "builtins_fs.h"
+
+typedef union
+{
+	fort_int_t integer;
+	fort_real_t real;
+} fort_number_t;
 
 static int
 fort_is_numeric(fort_cell_type_t type)
@@ -10,33 +17,30 @@ fort_is_numeric(fort_cell_type_t type)
 	return type == FORT_REAL || type == FORT_INTEGER;
 }
 
-static void
-fort_promote_int_to_real(fort_cell_t* cell)
-{
-	cell->type = FORT_REAL;
-	cell->data.real = (fort_real_t)cell->data.integer;
-}
-
 static fort_err_t
-fort_numeric_2pop(fort_t* fort, fort_cell_t* lhs, fort_cell_t* rhs)
+fort_numeric_2pop(
+	fort_t* fort, fort_cell_type_t* type,
+	fort_number_t* lhs, fort_number_t* rhs
+)
 {
-	fort_cell_t *lhsp, *rhsp;
-	FORT_ENSURE(fort_stack_address(fort, 0, &rhsp));
-	FORT_ENSURE(fort_stack_address(fort, 1, &lhsp));
+	fort_cell_type_t lhs_type, rhs_type;
+	FORT_ENSURE(fort_get_type(fort, 0, &rhs_type));
+	FORT_ENSURE(fort_get_type(fort, 1, &lhs_type));
 
-	FORT_ASSERT(
-		fort_is_numeric(lhsp->type) && fort_is_numeric(rhsp->type),
-		FORT_ERR_TYPE
-	);
+	FORT_ASSERT(fort_is_numeric(lhs_type) && fort_is_numeric(rhs_type), FORT_ERR_TYPE);
 
-	if(lhsp->type != FORT_INTEGER || rhsp->type != FORT_INTEGER)
+	if(lhs_type == FORT_INTEGER && rhs_type == FORT_INTEGER)
 	{
-		if(lhsp->type == FORT_INTEGER) { fort_promote_int_to_real(lhsp); }
-		if(rhsp->type == FORT_INTEGER) { fort_promote_int_to_real(rhsp); }
+		*type = FORT_INTEGER;
+		FORT_ENSURE(fort_as_integer(fort, 0, &rhs->integer));
+		FORT_ENSURE(fort_as_integer(fort, 1, &lhs->integer));
 	}
-
-	*lhs = *lhsp;
-	*rhs = *rhsp;
+	else
+	{
+		*type = FORT_REAL;
+		FORT_ENSURE(fort_as_real(fort, 0, &rhs->real));
+		FORT_ENSURE(fort_as_real(fort, 1, &lhs->real));
+	}
 
 	return fort_ndrop(fort, 2);
 }
@@ -46,17 +50,18 @@ fort_add(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort_cell_t lhs, rhs;
+	fort_cell_type_t type;
+	fort_number_t lhs, rhs;
 
-	FORT_ENSURE(fort_numeric_2pop(fort, &lhs, &rhs));
+	FORT_ENSURE(fort_numeric_2pop(fort, &type, &lhs, &rhs));
 
-	if(lhs.type == FORT_REAL)
+	if(type == FORT_REAL)
 	{
-		return fort_push_real(fort, lhs.data.real + rhs.data.real);
+		return fort_push_real(fort, lhs.real + rhs.real);
 	}
 	else
 	{
-		return fort_push_integer(fort, lhs.data.integer + rhs.data.integer);
+		return fort_push_integer(fort, lhs.integer + rhs.integer);
 	}
 }
 
@@ -78,13 +83,24 @@ fort_colon(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
-fort_def_end(fort_t* fort, fort_word_t* word)
+fort_semicolon(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_NOT_FOUND);
+	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_SYNTAX);
+	FORT_ENSURE(
+		fort_push_word_data_internal(
+			fort->ctx,
+			fort->current_word,
+			(fort_cell_t){
+				.type = FORT_XT,
+				.data = { .ref = fort->ctx->exit }
+			}
+		)
+	);
 	FORT_ENSURE(fort_end_word(fort->ctx, fort->current_word));
 	fort->current_word = NULL;
+	fort->state = FORT_STATE_INTERPRETING;
 
 	return FORT_OK;
 }
@@ -162,6 +178,19 @@ fort_tick(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
+fort_quote(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+
+	if(cell->type == FORT_XT) { cell->type = FORT_TICK; }
+
+	return FORT_OK;
+}
+
+static fort_err_t
 fort_scan_until_char(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -219,36 +248,78 @@ fort_compile(fort_t* fort, fort_word_t* word)
 	(void)word;
 
 	fort_cell_t* cell;
+	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_SYNTAX);
 	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
-	FORT_ENSURE(fort_push_word_data_internal(fort->ctx, word, *cell));
+	FORT_ENSURE(fort_push_word_data_internal(fort->ctx, fort->current_word, *cell));
 
 	return fort_ndrop(fort, 1);
 }
 
 static fort_err_t
-fort_return(fort_t* fort, fort_word_t* word)
+fort_equal(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
-	fort_int_t code;
-	FORT_ENSURE(fort_pop_integer(fort, &code));
-	return code;
+
+	fort_cell_t *lhs, *rhs;
+	FORT_ENSURE(fort_stack_address(fort, 0, &rhs));
+	FORT_ENSURE(fort_stack_address(fort, 1, &lhs));
+	FORT_ENSURE(fort_push_integer(fort, lhs->type == rhs->type && lhs->data.ref == rhs->data.ref));
+	FORT_ENSURE(fort_move(fort, 0, 2));
+
+	return fort_ndrop(fort, 2);
+}
+
+static fort_err_t
+fort_print(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+
+	bk_printf(fort->config.output, "%s ", fort_cell_type_t_to_str(cell->type) + sizeof("FORT"));
+
+	switch(cell->type)
+	{
+		case FORT_NULL:
+			break;
+		case FORT_REAL:
+			bk_printf(fort->config.output, FORT_REAL_FMT, cell->data.real);
+			break;
+		case FORT_INTEGER:
+			bk_printf(fort->config.output, FORT_INT_FMT, cell->data.integer);
+			break;
+		case FORT_STRING:
+			bk_printf(fort->config.output, "\"%s\"", ((fort_string_t*)cell->data.ref)->ptr);
+			break;
+		case FORT_TICK:
+		case FORT_XT:
+			bk_printf(fort->config.output, "%p", cell->data.ref);
+			break;
+	}
+	bk_printf(fort->config.output, "\n");
+
+	return fort_ndrop(fort, 1);
 }
 
 fort_err_t
 fort_load_builtins(fort_t* fort)
 {
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("+"), &fort_add, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("="), &fort_equal, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("["), &fort_bracket_open, 1, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("]"), &fort_bracket_close, 0, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("immediate"), &fort_immediate, 1, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile-only"), &fort_compile_only, 1, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("immediate"), &fort_immediate, 1, 1));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile-only"), &fort_compile_only, 1, 1));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile"), &fort_compile, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(":"), &fort_colon, 0, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("def-end"), &fort_def_end, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(";"), &fort_semicolon, 1, 1));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("scan-until-char"), &fort_scan_until_char, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("next-char"), &fort_get_next_char, 0, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(return)"), &fort_return, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("'"), &fort_tick, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("print"), &fort_print, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("quote"), &fort_quote, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(return)"), &fort_return, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(exec-colon)"), &fort_exec_colon, 0, 0));
 
 	fort_string_ref_t core = {
 		.ptr = (void*)fort_builtins_fs_data,

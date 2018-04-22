@@ -42,7 +42,7 @@ setup_fixture(const MunitParameter params[], void* userdata)
 	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create_ctx(&fort_ctx_cfg, &fixture->ctx));
 	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create(fixture->ctx, &fort_cfg, &fixture->fort1));
 	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create(fixture->ctx, &fort_cfg, &fixture->fort2));
-	/*munit_assert_enum(fort_err_t, FORT_OK, ==, fort_load_builtins(fixture->fort1));*/
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_load_builtins(fixture->fort1));
 	munit_assert_int64(0, ==, fort_get_stack_size(fixture->fort1));
 	munit_assert_int64(0, ==, fort_get_stack_size(fixture->fort2));
 

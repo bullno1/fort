@@ -111,12 +111,15 @@ fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header)
 	if(ugc_header == NULL)
 	{
 		fort_ctx_t* ctx = gc->userdata;
+
 		fort_gc_scan_dict(ctx, &ctx->dict);
+		fort_gc_visit_ptr(ctx, ctx->exit);
+		fort_gc_visit_ptr(ctx, ctx->switch_);
+
 		bk_dlist_foreach(itr, &ctx->forts)
 		{
 			fort_t* fort = BK_CONTAINER_OF(itr, fort_t, ctx_link);
 
-			fort_gc_visit_ptr(ctx, fort->return_to_native);
 			fort_gc_visit_ptr(ctx, fort->current_word);
 
 			bk_array_foreach(fort_cell_t, itr, fort->param_stack)

@@ -106,21 +106,23 @@ fort_semicolon(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
-fort_bracket_open(fort_t* fort, fort_word_t* word)
+fort_state_set(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort_set_state(fort, FORT_STATE_INTERPRETING);
+	fort_int_t state;
+	FORT_ENSURE(fort_pop_integer(fort, &state));
+	fort_set_state(fort, state);
+
 	return FORT_OK;
 }
 
 static fort_err_t
-fort_bracket_close(fort_t* fort, fort_word_t* word)
+fort_state_get(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort_set_state(fort, FORT_STATE_COMPILING);
-	return FORT_OK;
+	return fort_push_integer(fort, fort_get_state(fort));
 }
 
 static fort_err_t
@@ -306,8 +308,8 @@ fort_load_builtins(fort_t* fort)
 {
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("+"), &fort_add, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("="), &fort_equal, 0, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("["), &fort_bracket_open, 1, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("]"), &fort_bracket_close, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("state"), &fort_state_get, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("state!"), &fort_state_set, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("immediate"), &fort_immediate, 1, 1));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile-only"), &fort_compile_only, 1, 1));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile"), &fort_compile, 0, 0));

@@ -1,5 +1,5 @@
-: c immediate next-char ;
+: [ immediate 0 state! ;
 
-: [compile] immediate compile-only compile ;
+: ] 1 state! ;
 
-: " c " [compile] scan-until-char ;
+: " [ next-char " compile ] scan-until-char ;

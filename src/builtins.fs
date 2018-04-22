@@ -14,14 +14,20 @@
 : over ( a b -- a b a )
 	1 pick ;
 
-: swap ( a b -- b a )
-	1 roll ;
-
 : rot ( a b c -- b c a )
 	2 roll ;
 
+: -rot ( a b c -- c a b )
+	rot rot ;
+
 : drop ( a a -- a )
 	1 ndrop ;
+
+: nip ( a b -- b )
+	swap drop ;
+
+: tuck ( a b -- b a b )
+	swap over ;
 
 \ String literal
 : " clear-scan-buf [ next-char " compile ] scan-until-char scan-buf ;

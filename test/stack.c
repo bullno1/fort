@@ -158,6 +158,8 @@ fort(const MunitParameter params[], void* fixture_)
 	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "2 1", "1 2 swap");
 	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "2 3 1", "1 2 3 rot");
 	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "1 2", "1 2 3 drop");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "2", "1 2 nip");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "2 1 2", "1 2 tuck");
 
 	return MUNIT_OK;
 }

@@ -350,6 +350,23 @@ fort_f_ndrop(fort_t* fort, fort_word_t* word)
 	return fort_ndrop(fort, n);
 }
 
+// Implement in C because this word is too common and `1 roll` is inefficient
+static fort_err_t
+fort_swap(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+	fort_cell_t *a, *b;
+	fort_cell_t tmp;
+
+	FORT_ENSURE(fort_stack_address(fort, 0, &b));
+	FORT_ENSURE(fort_stack_address(fort, 1, &a));
+	tmp = *b;
+	*b = *a;
+	*a = tmp;
+
+	return FORT_OK;
+}
+
 fort_err_t
 fort_load_builtins(fort_t* fort)
 {
@@ -375,6 +392,7 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("pick"), &fort_f_pick, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("ndrop"), &fort_f_ndrop, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("roll"), &fort_f_roll, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("swap"), &fort_swap, 0, 0));
 
 	/*FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("w-create"), &fort_w_create, 0, 0));*/
 	/*FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("w-push"), &fort_w_push, 0, 0));*/

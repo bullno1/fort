@@ -93,7 +93,7 @@ fort_create(fort_ctx_t* ctx, const fort_config_t* config, fort_t** fortp)
 		.state = FORT_STATE_INTERPRETING
 	};
 
-	fort_reset(fort);
+	FORT_ENSURE(fort_reset(fort));
 	bk_dlist_append(&ctx->forts, &fort->ctx_link);
 
 	*fortp = fort;
@@ -110,15 +110,20 @@ fort_destroy(fort_t* fort)
 	bk_free(fort->ctx->config.allocator, fort);
 }
 
-void
+fort_err_t
 fort_reset(fort_t* fort)
 {
+	// TODO: Think of a more appropriate error type
+	FORT_ASSERT(fort->exec_loop_level == 0, FORT_ERR_TYPE);
+
 	bk_array_clear(fort->param_stack);
 	bk_array_clear(fort->return_stack);
 	bk_array_clear(fort->scan_buf);
 	fort->current_word = NULL;
 	fort->current_frame = (fort_stack_frame_t){ 0 };
 	fort->state = FORT_STATE_INTERPRETING;
+
+	return FORT_OK;
 }
 
 fort_ctx_t*

@@ -303,6 +303,36 @@ fort_print(fort_t* fort, fort_word_t* word)
 	return fort_ndrop(fort, 1);
 }
 
+static fort_err_t
+fort_f_pick(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_int_t n;
+	FORT_ENSURE(fort_pop_integer(fort, &n));
+	return fort_pick(fort, n);
+}
+
+static fort_err_t
+fort_f_roll(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_int_t n;
+	FORT_ENSURE(fort_pop_integer(fort, &n));
+	return fort_roll(fort, n);
+}
+
+static fort_err_t
+fort_f_ndrop(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_int_t n;
+	FORT_ENSURE(fort_pop_integer(fort, &n));
+	return fort_ndrop(fort, n);
+}
+
 fort_err_t
 fort_load_builtins(fort_t* fort)
 {
@@ -322,6 +352,16 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("quote"), &fort_quote, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(return)"), &fort_return, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(exec-colon)"), &fort_exec_colon, 0, 0));
+
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("pick"), &fort_f_pick, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("ndrop"), &fort_f_ndrop, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("roll"), &fort_f_roll, 0, 0));
+
+	/*FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("w-create"), &fort_w_create, 0, 0));*/
+	/*FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("w-push"), &fort_w_push, 0, 0));*/
+	/*FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("w-delete"), &fort_w_delete, 0, 0));*/
+	/*FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("w-get"), &fort_delete_get, 0, 0));*/
+	/*FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("w-set"), &fort_delete_set, 0, 0));*/
 
 	fort_string_ref_t core = {
 		.ptr = (void*)fort_builtins_fs_data,

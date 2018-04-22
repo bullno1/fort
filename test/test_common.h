@@ -25,6 +25,8 @@
 
 #define fort_assert_same_stack_effect(fort1, fort2, str1, str2) \
 	do { \
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_reset(fort1)); \
+		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_reset(fort2)); \
 		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_interpret_string(fort1, fort_string_ref(str1), FORT_STRING_REF("lhs"))); \
 		munit_assert_enum(fort_err_t, FORT_OK, ==, fort_interpret_string(fort2, fort_string_ref(str2), FORT_STRING_REF("rhs"))); \
 		fort_assert_stack_equal(fort1, fort2); \

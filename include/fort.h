@@ -136,7 +136,7 @@ fort_create(fort_ctx_t* ctx, const fort_config_t* config, fort_t** fortp);
 FORT_DECL void
 fort_destroy(fort_t* fort);
 
-FORT_DECL void
+FORT_DECL fort_err_t
 fort_reset(fort_t* fort);
 
 FORT_DECL fort_err_t

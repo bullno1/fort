@@ -144,6 +144,24 @@ xmove(const MunitParameter params[], void* fixture_)
 	return MUNIT_OK;
 }
 
+static MunitResult
+fort(const MunitParameter params[], void* fixture_)
+{
+	(void)params;
+	fixture_t* fixture = fixture_;
+
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "1 2", "1 2 3 1 ndrop");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "1 2 3 2", "1 2 3 1 pick");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "2 3 1", "1 2 3 2 roll");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "3 3", "3 dup");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "1 2 1", "1 2 over");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "2 1", "1 2 swap");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "2 3 1", "1 2 3 rot");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "1 2", "1 2 3 drop");
+
+	return MUNIT_OK;
+}
+
 static MunitTest tests[] = {
 	{
 		.name = "/push_pop",
@@ -172,6 +190,12 @@ static MunitTest tests[] = {
 	{
 		.name = "/xmove",
 		.test = xmove,
+		.setup = setup_fixture,
+		.tear_down = teardown_fixture
+	},
+	{
+		.name = "/fort",
+		.test = fort,
 		.setup = setup_fixture,
 		.tear_down = teardown_fixture
 	},

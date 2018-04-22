@@ -32,6 +32,17 @@ fort_exec_loop(fort_t* fort)
 }
 
 static fort_err_t
+fort_enter_exec_loop(fort_t* fort)
+{
+	++fort->exec_loop_level;
+	fort_err_t err = fort_exec_loop(fort);
+	if(err == FORT_SWITCH) { err = FORT_OK; }
+	--fort->exec_loop_level;
+
+	return err;
+}
+
+static fort_err_t
 fort_push_stack_frame(fort_t* fort, fort_word_t* word)
 {
 	bk_array_push(fort->return_stack, fort->current_frame);
@@ -55,27 +66,26 @@ fort_execute(fort_t* fort)
 	fort->current_frame.word = word;
 	FORT_ENSURE(fort_ndrop(fort, 1));
 
-	return word->code(fort, word);
+	FORT_ENSURE(word->code(fort, word));
+
+	return fort_enter_exec_loop(fort);
 }
 
 fort_err_t
 fort_exec_colon(fort_t* fort, fort_word_t* word)
 {
-	int top_is_native = fort->current_frame.word == NULL;
+	fort_int_t exec_loop_level = fort->exec_loop_level;
 
-	if(top_is_native)
+	if(exec_loop_level == 0)
 	{
 		FORT_ENSURE(fort_push_stack_frame(fort, fort->ctx->switch_));
 	}
 
 	fort_push_stack_frame(fort, word);
 
-	if(top_is_native)
+	if(exec_loop_level == 0)
 	{
-		fort_err_t err = fort_exec_loop(fort);
-		if(err == FORT_SWITCH) { err = FORT_OK; }
-
-		return err;
+		return fort_enter_exec_loop(fort);
 	}
 	else
 	{

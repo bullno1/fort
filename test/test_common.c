@@ -58,3 +58,33 @@ teardown_fixture(void* fixture_)
 	fort_destroy_ctx(fixture->ctx);
 	bk_free(bk_default_allocator, fixture);
 }
+
+void*
+setup_fort(const MunitParameter params[], void* userdata)
+{
+	(void)params;
+	(void)userdata;
+
+	fort_ctx_config_t fort_ctx_cfg = {
+		.allocator = bk_default_allocator
+	};
+	fort_config_t fort_cfg = {
+		.output = bk_stdout
+	};
+	fort_ctx_t* ctx;
+	fort_t* fort;
+
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create_ctx(&fort_ctx_cfg, &ctx));
+	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create(ctx, &fort_cfg, &fort));
+
+	return fort;
+}
+
+void
+teardown_fort(void* fixture)
+{
+	fort_t* fort = fixture;
+	fort_ctx_t* ctx = fort_get_ctx(fort);
+	fort_destroy(fort);
+	fort_destroy_ctx(ctx);
+}

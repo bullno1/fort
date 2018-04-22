@@ -46,4 +46,10 @@ setup_fixture(const MunitParameter params[], void* userdata);
 void
 teardown_fixture(void* fixture);
 
+void*
+setup_fort(const MunitParameter params[], void* userdata);
+
+void
+teardown_fort(void* fixture);
+
 #endif

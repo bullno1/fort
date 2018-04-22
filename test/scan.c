@@ -8,36 +8,6 @@
 	              } \
 	}
 
-static void*
-setup(const MunitParameter params[], void* userdata)
-{
-	(void)params;
-	(void)userdata;
-
-	fort_ctx_config_t fort_ctx_cfg = {
-		.allocator = bk_default_allocator
-	};
-	fort_config_t fort_cfg = {
-		.output = bk_stdout
-	};
-	fort_ctx_t* ctx;
-	fort_t* fort;
-
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create_ctx(&fort_ctx_cfg, &ctx));
-	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create(ctx, &fort_cfg, &fort));
-
-	return fort;
-}
-
-static void
-teardown(void* fixture)
-{
-	fort_t* fort = fixture;
-	fort_ctx_t* ctx = fort_get_ctx(fort);
-	fort_destroy(fort);
-	fort_destroy_ctx(ctx);
-}
-
 static MunitResult
 next_token(const MunitParameter params[], void* fixture)
 {
@@ -93,8 +63,8 @@ static MunitTest tests[] = {
 	{
 		.name = "/next_token",
 		.test = next_token,
-		.setup = setup,
-		.tear_down = teardown
+		.setup = setup_fort,
+		.tear_down = teardown_fort
 	},
 	{ 0 }
 };

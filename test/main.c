@@ -4,6 +4,7 @@
 
 #define TEST_SUITES(X) \
 	X(scan) \
+	X(stack) \
 	X(interpret) \
 	X(stack) \
 	X(compile)

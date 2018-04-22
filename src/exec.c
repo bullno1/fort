@@ -31,13 +31,15 @@ fort_exec_loop(fort_t* fort)
 	}
 }
 
-static void
+static fort_err_t
 fort_push_stack_frame(fort_t* fort, fort_word_t* word)
 {
 	bk_array_push(fort->return_stack, fort->current_frame);
 	fort->current_frame.word = word;
 	fort->current_frame.pc = word->data;
 	fort->current_frame.max_pc = word->data + bk_array_len(word->data) - 1;
+
+	return FORT_OK;
 }
 
 fort_err_t
@@ -45,10 +47,15 @@ fort_execute(fort_t* fort)
 {
 	fort_cell_t* cell;
 	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
-	// TODO: pin cell in case of gc
+	FORT_ASSERT(cell->type == FORT_XT, FORT_ERR_TYPE);
+
+	fort_word_t* word = cell->data.ref;
+	FORT_ENSURE(fort_push_stack_frame(fort, fort->ctx->switch_));
+	// Pin the word to the stack frame before popping to prevent GC
+	fort->current_frame.word = word;
 	FORT_ENSURE(fort_ndrop(fort, 1));
 
-	return fort_exec_cell(fort, *cell);
+	return word->code(fort, word);
 }
 
 fort_err_t
@@ -58,7 +65,7 @@ fort_exec_colon(fort_t* fort, fort_word_t* word)
 
 	if(top_is_native)
 	{
-		fort_push_stack_frame(fort, fort->ctx->switch_);
+		FORT_ENSURE(fort_push_stack_frame(fort, fort->ctx->switch_));
 	}
 
 	fort_push_stack_frame(fort, word);

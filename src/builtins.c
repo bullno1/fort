@@ -193,6 +193,29 @@ fort_quote(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
+fort_scan_buf(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_string_ref_t ref = {
+		.length = bk_array_len(fort->scan_buf),
+		.ptr = fort->scan_buf
+	};
+
+	return fort_push_string(fort, ref);
+}
+
+static fort_err_t
+fort_clear_scan_buf(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	bk_array_clear(fort->scan_buf);
+
+	return FORT_OK;
+}
+
+static fort_err_t
 fort_scan_until_char(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -202,7 +225,6 @@ fort_scan_until_char(fort_t* fort, fort_word_t* word)
 
 	// TODO: record start pos
 
-	bk_array_clear(fort->scan_buf);
 	char ch;
 	for(;;)
 	{
@@ -219,12 +241,7 @@ fort_scan_until_char(fort_t* fort, fort_word_t* word)
 
 		if(ch == end_char)
 		{
-			fort_string_ref_t ref = {
-				.length = bk_array_len(fort->scan_buf),
-				.ptr = fort->scan_buf
-			};
-
-			return fort_push_string(fort, ref);
+			return FORT_OK;
 		}
 		else
 		{
@@ -346,6 +363,8 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(":"), &fort_colon, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(";"), &fort_semicolon, 1, 1));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("scan-until-char"), &fort_scan_until_char, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("scan-buf"), &fort_scan_buf, 0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("clear-scan-buf"), &fort_clear_scan_buf, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("next-char"), &fort_get_next_char, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("'"), &fort_tick, 0, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("print"), &fort_print, 0, 0));

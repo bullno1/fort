@@ -2,10 +2,26 @@
 
 : ] 1 state! ;
 
-: dup  0 pick ;
-: over 1 pick ;
-: swap 1 roll ;
-: rot  2 roll ;
-: drop 1 ndrop ;
+: [c] immediate compile-only next-char compile ;
 
-: " [ next-char " compile ] scan-until-char ;
+: ( immediate clear-scan-buf [ next-char ) compile ] scan-until-char ;
+: \ immediate clear-scan-buf [ 10 compile ] scan-until-char ;
+
+\ Stack manipulation
+: dup ( a -- a a )
+	0 pick ;
+
+: over ( a b -- a b a )
+	1 pick ;
+
+: swap ( a b -- b a )
+	1 roll ;
+
+: rot ( a b c -- b c a )
+	2 roll ;
+
+: drop ( a a -- a )
+	1 ndrop ;
+
+\ String literal
+: " clear-scan-buf [ next-char " compile ] scan-until-char scan-buf ;

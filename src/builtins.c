@@ -673,8 +673,8 @@ fort_err_t
 fort_load_builtins(fort_t* fort)
 {
 	// Flow control
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(jmp)"), &fort_jmp, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(jmp0)"), &fort_jmp0, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(jmp)"), &fort_jmp, FORT_WORD_COMPILE_ONLY));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(jmp0)"), &fort_jmp0, FORT_WORD_COMPILE_ONLY));
 
 	// Arithmetic
 #define FORT_REGISTER_NUMERIC_BIN_OPS(NAME, OP) \

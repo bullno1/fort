@@ -124,6 +124,8 @@ fort_strpool_alloc(
 fort_err_t
 fort_strpool_release(fort_ctx_t* ctx, fort_string_t* str)
 {
+	if(str == NULL) { return FORT_OK; }
+
 	fort_strpool_entry_t entry = {
 		.hash = XXH32(str->ptr, str->length, (uintptr_t)ctx),
 		.owned = 1,
@@ -149,6 +151,12 @@ fort_strpool_check(
 	fort_string_t** strp
 )
 {
+	if(ref.length == 0)
+	{
+		*strp = NULL;
+		return FORT_OK;
+	}
+
 	fort_strpool_entry_t entry = {
 		.hash = XXH32(ref.ptr, ref.length, (uintptr_t)ctx),
 		.owned = 0,

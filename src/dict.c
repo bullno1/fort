@@ -33,6 +33,31 @@ __KHASH_IMPL(
 	fort_cell_equal
 )
 
+static fort_err_t
+fort_push_word(fort_t* fort, fort_word_t* word)
+{
+	return fort_push(fort, (fort_cell_t){
+		.type = FORT_XT,
+		.data = { .ref = word }
+	});
+}
+
+static fort_err_t
+fort_normalize_word_data_index(fort_word_t* word, fort_int_t* indexp)
+{
+	FORT_ASSERT(word->data != NULL, FORT_ERR_OVERFLOW);
+
+	fort_int_t data_size = bk_array_len(word->data);
+	fort_int_t index = *indexp;
+	index = index >= 0 ? index : data_size + index;
+	FORT_ASSERT(index >= 0, FORT_ERR_UNDERFLOW);
+	FORT_ASSERT(index < data_size, FORT_ERR_OVERFLOW);
+
+	*indexp = index;
+
+	return FORT_OK;
+}
+
 fort_err_t
 fort_begin_word(
 	fort_ctx_t* ctx,
@@ -60,9 +85,9 @@ fort_begin_word(
 	}
 
 	FORT_ENSURE(fort_strpool_alloc(ctx, name, &current_word->name));
+	fort_gc_add_ptr_ref(ctx, current_word, current_word->name);
 	current_word->code = code;
-	current_word->immediate = 0;
-	current_word->compile_only = 0;
+	current_word->flags = 0;
 
 	*wordp = current_word;
 
@@ -94,14 +119,12 @@ fort_create_word(
 	fort_ctx_t* ctx,
 	fort_string_ref_t name,
 	fort_native_fn_t code,
-	unsigned immediate,
-	unsigned compile_only
+	fort_int_t flags
 )
 {
 	fort_word_t* word = NULL;
 	FORT_ENSURE(fort_begin_word(ctx, name, code, &word));
-	word->immediate = immediate;
-	word->compile_only = compile_only;
+	word->flags = flags;
 	return fort_end_word(ctx, word);
 }
 
@@ -160,8 +183,167 @@ fort_push_word_data_internal(
 		word->data = bk_array_create(ctx->config.allocator, fort_cell_t, 1);
 	}
 
+	// TODO: ensure word size can't grow over INT_MAX
 	bk_array_push(word->data, cell);
 	fort_gc_add_cell_ref(ctx, word, cell);
+
+	return FORT_OK;
+}
+
+fort_err_t
+fort_create_unnamed_word(fort_t* fort)
+{
+	fort_word_t* word = NULL;
+	FORT_ENSURE(fort_begin_word(fort->ctx, FORT_STRING_REF(""), &fort_push_word, &word));
+	return fort_push_word(fort, word);
+}
+
+FORT_DECL fort_err_t
+fort_get_word_data(fort_t* fort, fort_word_t* word, fort_int_t index)
+{
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
+
+	FORT_ENSURE(fort_normalize_word_data_index(word, &index));
+
+	return fort_push(fort, word->data[index]);
+}
+
+FORT_DECL fort_err_t
+fort_set_word_data(fort_t* fort, fort_word_t* word, fort_int_t index)
+{
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 1, &word)); }
+
+	FORT_ENSURE(fort_normalize_word_data_index(word, &index));
+
+	word->data[index] = *cell;
+	fort_gc_add_cell_ref(fort->ctx, word, *cell);
+
+	return fort_ndrop(fort, 1);
+}
+
+FORT_DECL fort_err_t
+fort_delete_word_data(fort_t* fort, fort_word_t* word, fort_int_t index)
+{
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
+
+	FORT_ENSURE(fort_normalize_word_data_index(word, &index));
+	bk_array_remove(word->data, (size_t)index);
+
+	return FORT_OK;
+}
+
+FORT_DECL fort_err_t
+fort_push_word_data(fort_t* fort, fort_word_t* word)
+{
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 1, &word)); }
+
+	FORT_ENSURE(fort_push_word_data_internal(fort->ctx, word, *cell));
+
+	return fort_ndrop(fort, 1);
+}
+
+FORT_DECL fort_err_t
+fort_clear_word_data(fort_t* fort, fort_word_t* word)
+{
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
+	if(word->data == NULL) { return FORT_OK; }
+
+	bk_array_clear(word->data);
+
+	return FORT_OK;
+}
+
+fort_err_t
+fort_get_word_length(fort_t* fort, fort_word_t* word)
+{
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
+
+	if(word->data == NULL)
+	{
+		return fort_push_integer(fort, 0);
+	}
+	else
+	{
+		return fort_push_integer(fort, bk_array_len(word->data));
+	}
+}
+
+FORT_DECL fort_err_t
+fort_get_word_name(fort_t* fort, fort_word_t* word)
+{
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
+
+	return fort_push(fort, (fort_cell_t){
+		.type = FORT_STRING,
+		.data = { .ref = word->name }
+	});
+}
+
+FORT_DECL fort_err_t
+fort_set_word_name(fort_t* fort, fort_word_t* word)
+{
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	FORT_ASSERT(cell->type == FORT_STRING, FORT_ERR_TYPE);
+
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 1, &word)); }
+
+	word->name = cell->data.ref;
+	fort_gc_add_ptr_ref(fort->ctx, word, cell->data.ref);
+
+	return fort_ndrop(fort, 1);
+}
+
+FORT_DECL fort_err_t
+fort_get_word_code(fort_t* fort, fort_word_t* word, fort_native_fn_t* code)
+{
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
+
+	*code = word->code;
+
+	return FORT_OK;
+}
+
+FORT_DECL fort_err_t
+fort_set_word_code(fort_t* fort, fort_word_t* word, fort_native_fn_t code)
+{
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
+
+	word->code = code;
+
+	return FORT_OK;
+}
+
+FORT_DECL fort_err_t
+fort_get_word_flags(fort_t* fort, fort_word_t* word)
+{
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
+
+	return fort_push_integer(fort, word->flags);
+}
+
+FORT_DECL fort_err_t
+fort_set_word_flags(fort_t* fort, fort_word_t* word)
+{
+	fort_int_t flags;
+	FORT_ENSURE(fort_as_integer(fort, 0, &flags));
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 1, &word)); }
+
+	return fort_ndrop(fort, 1);
+}
+
+FORT_DECL fort_err_t
+fort_register_word(fort_t* fort, fort_word_t* word)
+{
+	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
+
+	FORT_ASSERT(word->name != NULL, FORT_ERR_TYPE); // TODO: FORT_ERR_INVALID
 
 	return FORT_OK;
 }

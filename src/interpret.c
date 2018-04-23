@@ -18,7 +18,7 @@ fort_interpret_token(fort_t* fort, const fort_token_t* token)
 	}
 	else
 	{
-		FORT_ASSERT(!word->compile_only, FORT_ERR_COMPILE_ONLY);
+		FORT_ASSERT((word->flags & FORT_WORD_COMPILE_ONLY) == 0, FORT_ERR_COMPILE_ONLY);
 
 		return word->code(fort, word);
 	}
@@ -43,7 +43,7 @@ fort_compile_token(fort_t* fort, const fort_token_t* token)
 	}
 	else
 	{
-		if(word->immediate)
+		if(word->flags & FORT_WORD_IMMEDIATE)
 		{
 			return word->code(fort, word);
 		}

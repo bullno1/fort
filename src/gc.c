@@ -82,7 +82,7 @@ fort_gc_visit_cell(fort_ctx_t* ctx, fort_cell_t cell)
 }
 
 void
-fort_gc_add_ref(fort_ctx_t* ctx, void* src, void* dest)
+fort_gc_add_ptr_ref(fort_ctx_t* ctx, void* src, void* dest)
 {
 	if(src == NULL || dest == NULL) { return; }
 
@@ -92,7 +92,7 @@ fort_gc_add_ref(fort_ctx_t* ctx, void* src, void* dest)
 void
 fort_gc_add_cell_ref(fort_ctx_t* ctx, void* src, fort_cell_t dest)
 {
-	fort_gc_add_ref(ctx, src, fort_gc_get_cell_ref(dest));
+	fort_gc_add_ptr_ref(ctx, src, fort_gc_get_cell_ref(dest));
 }
 
 static void

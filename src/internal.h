@@ -47,11 +47,9 @@ struct fort_word_s
 {
 	fort_string_t* name;
 
+	fort_int_t flags;
 	fort_native_fn_t code;
 	BK_ARRAY(fort_cell_t) data;
-
-	unsigned immediate: 1;
-	unsigned compile_only: 1;
 };
 
 struct fort_stack_frame_s
@@ -101,6 +99,9 @@ fort_push(fort_t* fort, fort_cell_t value);
 
 fort_err_t
 fort_stack_address(fort_t* fort, fort_int_t index, fort_cell_t** cellp);
+
+fort_err_t
+fort_as_word(fort_t* fort, fort_int_t index, fort_word_t** value);
 
 // dict
 

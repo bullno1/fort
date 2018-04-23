@@ -81,6 +81,12 @@ BK_ENUM(fort_gc_op_t, FORT_GC_OP)
 
 BK_ENUM(fort_state_t, FORT_STATE)
 
+typedef enum fort_word_flag_e
+{
+	FORT_WORD_IMMEDIATE = 1 << 1,
+	FORT_WORD_COMPILE_ONLY = 1 << 2
+} fort_word_flag_t;
+
 struct fort_location_s
 {
 	uint16_t line;
@@ -158,6 +164,9 @@ fort_set_state(fort_t* fort, fort_state_t state);
  */
 
 FORT_DECL fort_err_t
+fort_push_null(fort_t* fort);
+
+FORT_DECL fort_err_t
 fort_push_integer(fort_t* fort, fort_int_t value);
 
 FORT_DECL fort_err_t
@@ -230,32 +239,55 @@ fort_execute(fort_t* fort);
  */
 
 FORT_DECL fort_err_t
+fort_find(fort_t* fort, fort_string_ref_t name);
+
+FORT_DECL fort_err_t
 fort_create_word(
 	fort_ctx_t* ctx, fort_string_ref_t name, fort_native_fn_t code,
-	unsigned immediate, unsigned compile_only
+	fort_int_t flags
 );
 
 FORT_DECL fort_err_t
-fort_create_unnamed_word(fort_t* fort, fort_native_fn_t code);
+fort_create_unnamed_word(fort_t* fort);
 
 FORT_DECL fort_err_t
-fort_find(fort_t* fort, fort_string_ref_t name);
+fort_get_word_code(fort_t* fort, fort_word_t* word, fort_native_fn_t* code);
+
+FORT_DECL fort_err_t
+fort_set_word_code(fort_t* fort, fort_word_t* word, fort_native_fn_t code);
+
+FORT_DECL fort_err_t
+fort_get_word_flags(fort_t* fort, fort_word_t* word);
+
+FORT_DECL fort_err_t
+fort_set_word_flags(fort_t* fort, fort_word_t* word);
+
+FORT_DECL fort_err_t
+fort_register_word(fort_t* fort, fort_word_t* word);
 
 FORT_DECL fort_err_t
 fort_get_word_data(fort_t* fort, fort_word_t* word, fort_int_t index);
 
 FORT_DECL fort_err_t
-fort_set_word_data(
-	fort_t* fort, fort_word_t* word, fort_int_t index, fort_int_t value
-);
+fort_set_word_data(fort_t* fort, fort_word_t* word, fort_int_t index);
 
 FORT_DECL fort_err_t
-fort_delete_word_data(
-	fort_t* fort, fort_word_t* word, fort_int_t index, fort_int_t n
-);
+fort_push_word_data(fort_t* fort, fort_word_t* word);
 
 FORT_DECL fort_err_t
-fort_push_word_data(fort_t* fort, fort_word_t* word, fort_int_t value);
+fort_delete_word_data(fort_t* fort, fort_word_t* word, fort_int_t index);
+
+FORT_DECL fort_err_t
+fort_clear_word_data(fort_t* fort, fort_word_t* word);
+
+FORT_DECL fort_err_t
+fort_get_word_length(fort_t* fort, fort_word_t* word);
+
+FORT_DECL fort_err_t
+fort_get_word_name(fort_t* fort, fort_word_t* word);
+
+FORT_DECL fort_err_t
+fort_set_word_name(fort_t* fort, fort_word_t* word);
 
 /** @} */
 

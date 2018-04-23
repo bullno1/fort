@@ -23,6 +23,15 @@ fort_push(fort_t* fort, fort_cell_t value)
 }
 
 fort_err_t
+fort_push_null(fort_t* fort)
+{
+	return fort_push(fort, (fort_cell_t){
+		.type = FORT_NULL,
+		.data = { .ref = NULL }
+	});
+}
+
+fort_err_t
 fort_push_integer(fort_t* fort, fort_int_t value)
 {
 	return fort_push(fort, (fort_cell_t){
@@ -45,10 +54,17 @@ fort_push_string(fort_t* fort, fort_string_ref_t value)
 {
 	fort_string_t* str;
 	FORT_ENSURE(fort_strpool_alloc(fort->ctx, value, &str));
-	return fort_push(fort, (fort_cell_t){
-		.type = FORT_STRING,
-		.data = { .ref = str }
-	});
+	if(str == NULL)
+	{
+		return fort_push_null(fort);
+	}
+	else
+	{
+		return fort_push(fort, (fort_cell_t){
+			.type = FORT_STRING,
+			.data = { .ref = str }
+		});
+	}
 }
 
 fort_err_t
@@ -170,6 +186,18 @@ fort_as_real(fort_t* fort, fort_int_t index, fort_real_t* value)
 		default:
 			return FORT_ERR_TYPE;
 	}
+}
+
+fort_err_t
+fort_as_word(fort_t* fort, fort_int_t index, fort_word_t** value)
+{
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, index, &cell));
+	FORT_ASSERT(cell->type == FORT_XT, FORT_ERR_TYPE);
+
+	*value = cell->data.ref;
+
+	return FORT_OK;
 }
 
 fort_err_t

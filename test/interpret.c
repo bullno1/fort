@@ -89,6 +89,8 @@ string(const MunitParameter params[], void* fixture_)
 	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_as_string(fixture->fort1, 0, &str));
 	munit_assert_string_equal("hello world ", str.ptr);
 
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "\" test\"", ": test \" test\" ; test");
+
 	return MUNIT_OK;
 }
 

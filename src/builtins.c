@@ -73,45 +73,34 @@ fort_numeric_2pop(
 	return fort_ndrop(fort, 2);
 }
 
-static fort_err_t
-fort_add(fort_t* fort, fort_word_t* word)
-{
-	(void)word;
+#define FORT_NUMERIC_BIN_OPS(X) \
+	X(add, +) \
+	X(sub, -) \
+	X(mul, *) \
+	X(div, /) \
+	X(lt, <) \
+	X(gt, >) \
+	X(lte, <=) \
+	X(gte, >=)
 
-	fort_cell_type_t type;
-	fort_number_t lhs, rhs;
-
-	FORT_ENSURE(fort_numeric_2pop(fort, &type, &lhs, &rhs));
-
-	if(type == FORT_REAL)
-	{
-		return fort_push_real(fort, lhs.real + rhs.real);
+#define FORT_DEFINE_NUMERIC_BIN(NAME, OP) \
+	static fort_err_t \
+	fort_##NAME (fort_t* fort, fort_word_t* word) { \
+		(void)word; \
+		fort_cell_type_t type; \
+		fort_number_t lhs, rhs; \
+		FORT_ENSURE(fort_numeric_2pop(fort, &type, &lhs, &rhs)); \
+		if(type == FORT_REAL) \
+		{ \
+			return fort_push_real(fort, lhs.real OP rhs.real); \
+		} \
+		else \
+		{ \
+			return fort_push_integer(fort, lhs.integer OP rhs.integer); \
+		} \
 	}
-	else
-	{
-		return fort_push_integer(fort, lhs.integer + rhs.integer);
-	}
-}
 
-static fort_err_t
-fort_sub(fort_t* fort, fort_word_t* word)
-{
-	(void)word;
-
-	fort_cell_type_t type;
-	fort_number_t lhs, rhs;
-
-	FORT_ENSURE(fort_numeric_2pop(fort, &type, &lhs, &rhs));
-
-	if(type == FORT_REAL)
-	{
-		return fort_push_real(fort, lhs.real - rhs.real);
-	}
-	else
-	{
-		return fort_push_integer(fort, lhs.integer - rhs.integer);
-	}
-}
+FORT_NUMERIC_BIN_OPS(FORT_DEFINE_NUMERIC_BIN)
 
 static fort_err_t
 fort_colon(fort_t* fort, fort_word_t* word)
@@ -688,8 +677,10 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(jmp0)"), &fort_jmp0, 0));
 
 	// Arithmetic
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("+"), &fort_add, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("-"), &fort_sub, 0));
+#define FORT_REGISTER_NUMERIC_BIN_OPS(NAME, OP) \
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(#OP), &fort_##NAME, 0));
+
+	FORT_NUMERIC_BIN_OPS(FORT_REGISTER_NUMERIC_BIN_OPS);
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("="), &fort_equal, 0));
 
 	// Compilation

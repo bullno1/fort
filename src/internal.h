@@ -77,8 +77,8 @@ struct fort_s
 
 	fort_config_t config;
 	fort_ctx_t* ctx;
-	BK_ARRAY(fort_cell_t) param_stack;
-	BK_ARRAY(fort_stack_frame_t) return_stack;
+	fort_cell_t *sp, *sp_min, *sp_max;
+	fort_stack_frame_t *fp, *fp_min, *fp_max;
 	BK_ARRAY(char) scan_buf;
 	fort_word_t* current_word;
 	fort_input_state_t input_state;

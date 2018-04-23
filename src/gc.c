@@ -122,12 +122,12 @@ fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header)
 
 			fort_gc_visit_ptr(ctx, fort->current_word);
 
-			bk_array_foreach(fort_cell_t, itr, fort->param_stack)
+			for(fort_cell_t* itr = fort->sp_min; itr <= fort->sp_max; ++itr)
 			{
 				fort_gc_visit_cell(gc->userdata, *itr);
 			}
 
-			bk_array_foreach(fort_stack_frame_t, itr, fort->return_stack)
+			for(fort_stack_frame_t* itr = fort->fp_min; itr <= fort->fp_max; ++itr)
 			{
 				fort_gc_visit_ptr(ctx, (void*)itr->word);
 			}

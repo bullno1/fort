@@ -36,7 +36,9 @@ setup_fixture(const MunitParameter params[], void* userdata)
 		.allocator = bk_default_allocator
 	};
 	fort_config_t fort_cfg = {
-		.output = bk_stdout
+		.output = bk_stdout,
+		.param_stack_size = 1024,
+		.return_stack_size = 1024
 	};
 
 	munit_assert_enum(fort_err_t, FORT_OK, ==, fort_create_ctx(&fort_ctx_cfg, &fixture->ctx));
@@ -69,7 +71,9 @@ setup_fort(const MunitParameter params[], void* userdata)
 		.allocator = bk_default_allocator
 	};
 	fort_config_t fort_cfg = {
-		.output = bk_stdout
+		.output = bk_stdout,
+		.param_stack_size = 1024,
+		.return_stack_size = 1024
 	};
 	fort_ctx_t* ctx;
 	fort_t* fort;

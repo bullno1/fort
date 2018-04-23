@@ -119,6 +119,8 @@ struct fort_ctx_config_s
 struct fort_config_s
 {
 	struct bk_file_s* output;
+	size_t param_stack_size;
+	size_t return_stack_size;
 };
 
 typedef fort_err_t(*fort_native_fn_t)(fort_t* fort, fort_word_t* word);

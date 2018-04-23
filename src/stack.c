@@ -2,15 +2,20 @@
 #include <bk/array.h>
 #include <fort/utils.h>
 
+fort_int_t
+fort_get_stack_size(fort_t* fort)
+{
+	return (fort_int_t)(fort->sp - fort->sp_min);
+}
+
 fort_err_t
 fort_stack_address(fort_t* fort, fort_int_t index, fort_cell_t** cellp)
 {
-	fort_int_t stack_size = bk_array_len(fort->param_stack);
-	index = index >= 0 ? stack_size - index - 1 : -index - 1;
-	FORT_ASSERT(index >= 0, FORT_ERR_UNDERFLOW);
-	FORT_ASSERT(index < stack_size, FORT_ERR_OVERFLOW);
+	fort_cell_t* addr = index >= 0 ? fort->sp - index - 1 : fort->sp_min - index - 1;
+	FORT_ASSERT(fort->sp_min <= addr , FORT_ERR_UNDERFLOW);
+	FORT_ASSERT(addr < fort->sp, FORT_ERR_OVERFLOW);
 
-	*cellp = fort->param_stack + index;
+	*cellp = addr;
 
 	return FORT_OK;
 }
@@ -18,7 +23,8 @@ fort_stack_address(fort_t* fort, fort_int_t index, fort_cell_t** cellp)
 fort_err_t
 fort_push(fort_t* fort, fort_cell_t value)
 {
-	bk_array_push(fort->param_stack, value);
+	FORT_ASSERT(fort->sp <= fort->sp_max, FORT_ERR_OVERFLOW);
+	*(fort->sp++) = value;
 	return FORT_OK;
 }
 
@@ -70,12 +76,12 @@ fort_push_string(fort_t* fort, fort_string_ref_t value)
 fort_err_t
 fort_ndrop(fort_t* fort, fort_int_t count)
 {
-	FORT_ASSERT(count >= 0, FORT_ERR_UNDERFLOW);
+	FORT_ASSERT(count >= 0, FORT_ERR_TYPE); // TODO: FORT_ERR_INVALID
 
-	fort_int_t stack_size = bk_array_len(fort->param_stack);
-	FORT_ASSERT(count <= stack_size, FORT_ERR_UNDERFLOW);
+	fort_cell_t* new_sp = fort->sp - count;
+	FORT_ASSERT(fort->sp_min <= new_sp, FORT_ERR_UNDERFLOW);
 
-	bk_array_resize(fort->param_stack, stack_size - count);
+	fort->sp = new_sp;
 
 	return FORT_OK;
 }
@@ -105,23 +111,14 @@ fort_roll(fort_t* fort, fort_int_t n)
 {
 	FORT_ASSERT(n >= 0, FORT_ERR_UNDERFLOW);
 
-	FORT_ENSURE(fort_pick(fort, n));
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, n, &cell));
+	fort_cell_t rolled_value = *cell;
 
-	fort_int_t num_elems = n + 1;
-	fort_cell_t* stack_end = fort->param_stack + bk_array_len(fort->param_stack);
-	memmove(
-		stack_end - num_elems - 1,
-		stack_end - num_elems,
-		sizeof(fort_cell_t) * num_elems
-	);
+	memmove(cell, cell + 1, sizeof(fort_cell_t) * n);
+	fort->sp[-1] = rolled_value;
 
-	return fort_ndrop(fort, 1);
-}
-
-fort_int_t
-fort_get_stack_size(fort_t* fort)
-{
-	return (fort_int_t)(bk_array_len(fort->param_stack));
+	return FORT_OK;
 }
 
 fort_err_t

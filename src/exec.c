@@ -45,7 +45,8 @@ fort_enter_exec_loop(fort_t* fort)
 static fort_err_t
 fort_push_stack_frame(fort_t* fort, fort_word_t* word)
 {
-	bk_array_push(fort->return_stack, fort->current_frame);
+	FORT_ASSERT(fort->fp <= fort->fp_max, FORT_ERR_OVERFLOW);
+	*(fort->fp++) = fort->current_frame;
 	fort->current_frame.word = word;
 	fort->current_frame.pc = word->data;
 	fort->current_frame.max_pc = word->data + bk_array_len(word->data) - 1;
@@ -98,11 +99,9 @@ fort_return(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	size_t return_stack_depth = bk_array_len(fort->return_stack);
-	FORT_ASSERT(return_stack_depth > 0, FORT_ERR_UNDERFLOW);
+	FORT_ASSERT(fort->fp > fort->fp_min, FORT_ERR_UNDERFLOW);
 
-	fort->current_frame = fort->return_stack[return_stack_depth - 1];
-	bk_array_resize(fort->return_stack, return_stack_depth - 1);
+	fort->current_frame = *(--fort->fp);
 
 	FORT_ASSERT(word->data != NULL && bk_array_len(word->data) >= 1, FORT_ERR_OVERFLOW);
 	return word->data[0].data.integer;

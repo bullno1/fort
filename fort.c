@@ -23,7 +23,9 @@ fort_main(int argc, char* argv[])
 		.allocator = bk_default_allocator
 	};
 	fort_config_t cfg = {
-		.output = bk_stdout
+		.output = bk_stdout,
+		.param_stack_size = 1024,
+		.return_stack_size = 1024
 	};
 
 	if((err = fort_create_ctx(&ctx_cfg, &ctx)) != FORT_OK) { goto end; }

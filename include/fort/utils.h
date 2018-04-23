@@ -34,4 +34,11 @@ fort_pop_real(fort_t* fort, fort_real_t* value)
 	return fort_ndrop(fort, 1);
 }
 
+BK_INLINE fort_err_t
+fort_pop_bool(fort_t* fort, fort_int_t* value)
+{
+	FORT_ENSURE(fort_as_bool(fort, 0, value));
+	return fort_ndrop(fort, 1);
+}
+
 #endif

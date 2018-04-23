@@ -76,6 +76,7 @@ void
 fort_reset_ctx(fort_ctx_t* ctx)
 {
 	kh_clear(fort_dict, &ctx->dict);
+	fort_end_word(ctx, ctx->exit);
 }
 
 fort_err_t

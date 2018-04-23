@@ -205,6 +205,9 @@ fort_as_integer(fort_t* fort, fort_int_t index, fort_int_t* value);
 FORT_DECL fort_err_t
 fort_as_real(fort_t* fort, fort_int_t index, fort_real_t* value);
 
+FORT_DECL fort_err_t
+fort_as_bool(fort_t* fort, fort_int_t index, fort_int_t* value);
+
 /** @} */
 
 /** @defgroup scan

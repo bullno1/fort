@@ -170,6 +170,16 @@ fort_as_integer(fort_t* fort, fort_int_t index, fort_int_t* value)
 }
 
 fort_err_t
+fort_as_bool(fort_t* fort, fort_int_t index, fort_int_t* value)
+{
+	fort_cell_t* cell;
+	FORT_ENSURE(fort_stack_address(fort, index, &cell));
+
+	*value = cell->data.ref != NULL;
+	return FORT_OK;
+}
+
+fort_err_t
 fort_as_real(fort_t* fort, fort_int_t index, fort_real_t* value)
 {
 	fort_cell_t* cell;

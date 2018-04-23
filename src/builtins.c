@@ -11,6 +11,34 @@ typedef union
 	fort_real_t real;
 } fort_number_t;
 
+static fort_err_t
+fort_jmp(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+	fort_int_t delta;
+	FORT_ENSURE(fort_pop_integer(fort, &delta));
+
+	fort->current_frame.pc += delta;
+
+	return FORT_OK;
+}
+
+static fort_err_t
+fort_jmp0(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_int_t delta;
+	FORT_ENSURE(fort_pop_integer(fort, &delta));
+
+	fort_int_t cond;
+	FORT_ENSURE(fort_pop_bool(fort, &cond));
+
+	if(!cond) { fort->current_frame.pc += delta; }
+
+	return FORT_OK;
+}
+
 static int
 fort_is_numeric(fort_cell_type_t type)
 {
@@ -62,6 +90,26 @@ fort_add(fort_t* fort, fort_word_t* word)
 	else
 	{
 		return fort_push_integer(fort, lhs.integer + rhs.integer);
+	}
+}
+
+static fort_err_t
+fort_sub(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_cell_type_t type;
+	fort_number_t lhs, rhs;
+
+	FORT_ENSURE(fort_numeric_2pop(fort, &type, &lhs, &rhs));
+
+	if(type == FORT_REAL)
+	{
+		return fort_push_real(fort, lhs.real - rhs.real);
+	}
+	else
+	{
+		return fort_push_integer(fort, lhs.integer - rhs.integer);
 	}
 }
 
@@ -262,6 +310,17 @@ fort_get_next_char(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
+fort_get_next_token(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_token_t token;
+	FORT_ENSURE(fort_next_token(fort, &token));
+
+	return fort_push_string(fort, token.lexeme);
+}
+
+static fort_err_t
 fort_compile(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -289,33 +348,53 @@ fort_equal(fort_t* fort, fort_word_t* word)
 }
 
 static void
+fort_print_string(struct bk_file_s* output, fort_string_t* str)
+{
+	if(str != NULL)
+	{
+		bk_printf(output, "\"%s\"", str->ptr);
+	}
+	else
+	{
+		bk_printf(output, "\"\"");
+	}
+}
+
+static void
+fort_print_word_ref(struct bk_file_s* output, fort_word_t* word)
+{
+	if(word->name)
+	{
+		bk_printf(output, "%s (%p)", word->name->ptr, (void*)word);
+	}
+	else
+	{
+		bk_printf(output, "(%p)", (void*)word);
+	}
+}
+
+static void
 fort_print_cell(fort_t* fort, fort_cell_t* cell)
 {
-	bk_printf(fort->config.output, "%s ", fort_cell_type_t_to_str(cell->type) + sizeof("FORT"));
+	struct bk_file_s* output = fort->config.output;
+	bk_printf(output, "%s ", fort_cell_type_t_to_str(cell->type) + sizeof("FORT"));
 
 	switch(cell->type)
 	{
 		case FORT_NULL:
 			break;
 		case FORT_REAL:
-			bk_printf(fort->config.output, FORT_REAL_FMT, cell->data.real);
+			bk_printf(output, FORT_REAL_FMT, cell->data.real);
 			break;
 		case FORT_INTEGER:
-			bk_printf(fort->config.output, FORT_INT_FMT, cell->data.integer);
+			bk_printf(output, FORT_INT_FMT, cell->data.integer);
 			break;
 		case FORT_STRING:
-			if(cell->data.ref != NULL)
-			{
-				bk_printf(fort->config.output, "\"%s\"", ((fort_string_t*)cell->data.ref)->ptr);
-			}
-			else
-			{
-				bk_printf(fort->config.output, "\"\"");
-			}
+			fort_print_string(output, cell->data.ref);
 			break;
 		case FORT_TICK:
 		case FORT_XT:
-			bk_printf(fort->config.output, "%p", cell->data.ref);
+			fort_print_word_ref(output, cell->data.ref);
 			break;
 	}
 
@@ -409,10 +488,17 @@ fort_current_word_get(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	return fort_push(fort, (fort_cell_t){
-		.type = FORT_XT,
-		.data = { .ref = fort->current_word }
-	});
+	if(fort->current_word)
+	{
+		return fort_push(fort, (fort_cell_t){
+			.type = FORT_XT,
+			.data = { .ref = fort->current_word }
+		});
+	}
+	else
+	{
+		return fort_push_null(fort);
+	}
 }
 
 static fort_err_t
@@ -420,10 +506,20 @@ fort_current_word_set(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort_word_t* top;
-	FORT_ENSURE(fort_as_word(fort, 0, &top));
+	fort_cell_type_t type;
+	fort_get_type(fort, 0, &type);
 
-	fort->current_word = top;
+	switch(type)
+	{
+		case FORT_NULL:
+			fort->current_word = NULL;
+			break;
+		case FORT_XT:
+			FORT_ENSURE(fort_as_word(fort, 0, &fort->current_word));
+			break;
+		default:
+			return FORT_ERR_TYPE;
+	}
 
 	return fort_ndrop(fort, 1);
 }
@@ -535,6 +631,43 @@ fort_word_flag_set(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
+fort_word_inspect(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_word_t* inspected_word;
+	FORT_ENSURE(fort_as_word(fort, 0, &inspected_word));
+	struct bk_file_s* output = fort->config.output;
+
+	bk_printf(output, "Name: ");
+	fort_print_string(output, inspected_word->name);
+	bk_printf(output, "\n");
+
+	bk_printf(output, "Flags: " FORT_INT_FMT "\n", inspected_word->flags);
+
+	bk_printf(output, "Code: 0x");
+	fort_native_fn_t code = word->code;
+	for (size_t i=0; i < sizeof(code); ++i)
+	{
+		bk_printf(output, "%.2x", ((unsigned char*)&code)[i]);
+	}
+	bk_printf(output, "\n");
+
+	bk_printf(output, "Data:\n");
+	if(inspected_word->data != NULL)
+	{
+		bk_array_foreach(fort_cell_t, itr, inspected_word->data)
+		{
+			bk_printf(output, "  ");
+			fort_print_cell(fort, itr);
+		}
+	}
+	bk_printf(output, "\n");
+
+	return fort_ndrop(fort, 1);
+}
+
+static fort_err_t
 fort_word_code_set(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -550,8 +683,13 @@ fort_word_code_set(fort_t* fort, fort_word_t* word)
 fort_err_t
 fort_load_builtins(fort_t* fort)
 {
+	// Flow control
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(jmp)"), &fort_jmp, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(jmp0)"), &fort_jmp0, 0));
+
 	// Arithmetic
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("+"), &fort_add, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("-"), &fort_sub, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("="), &fort_equal, 0));
 
 	// Compilation
@@ -574,6 +712,7 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("scan-buf"), &fort_scan_buf, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("clear-scan-buf"), &fort_clear_scan_buf, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("next-char"), &fort_get_next_char, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("next-token"), &fort_get_next_token, 0));
 
 	// Stack
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("pick"), &fort_f_pick, 0));
@@ -585,18 +724,19 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("reset"), &fort_f_reset, 0));
 
 	// Word manipulation
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-create"), &fort_word_create, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-push"), &fort_word_push, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-delete"), &fort_word_delete, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-at"), &fort_word_get_at, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-at!"), &fort_word_set_at, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-length"), &fort_word_length, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-name"), &fort_word_name_get, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-name!"), &fort_word_name_set, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-register"), &fort_word_register, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-code!"), &fort_word_code_set, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-flag"), &fort_word_flag_get, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word-flag!"), &fort_word_flag_set, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.create"), &fort_word_create, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.push"), &fort_word_push, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.delete"), &fort_word_delete, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.at"), &fort_word_get_at, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.>at"), &fort_word_set_at, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.length"), &fort_word_length, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.name"), &fort_word_name_get, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.>name"), &fort_word_name_set, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.register"), &fort_word_register, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.>code"), &fort_word_code_set, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.flags"), &fort_word_flag_get, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.>flags"), &fort_word_flag_set, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.inspect"), &fort_word_inspect, 0));
 
 	fort_string_ref_t core = {
 		.ptr = (void*)fort_builtins_fs_data,

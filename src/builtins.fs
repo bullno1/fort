@@ -6,6 +6,7 @@
 
 : ( immediate clear-scan-buf [ next-char ) compile ] scan-until-char ;
 : \ immediate clear-scan-buf [ 10 compile ] scan-until-char ;
+: see ' word.inspect ;
 
 \ Stack manipulation
 : dup ( a -- a a )
@@ -29,5 +30,61 @@
 : tuck ( a b -- b a b )
 	swap over ;
 
+\ Word manipulation
+
+: word.at! ( word index data -- )
+	word.>at drop ;
+
+: word.name! ( word name -- )
+	word.>name drop ;
+
+: word.flags! ( word flags -- )
+	word.>flags drop ;
+
+\ Flow control
+
+: here
+	current-word word.length ;
+
+: >mark ( -- a ) \ a = current place in code
+	here 0 compile ;
+
+: >resolve ( a -- ) \ a = >mark'd location
+	dup here ( mark mark location )
+	swap - 2 - \ delta = length - mark - 2
+	( mark delta )
+	current-word -rot word.at! ;
+
+: postpone immediate
+	' compile ;
+
+: quote> immediate
+	' quote compile ;
+
+: compile-jmp
+	quote> (jmp) compile ;
+
+: compile-jmp0
+	quote> (jmp0) compile ;
+
+: if ( a -- )
+	immediate compile-only
+
+	>mark compile-jmp0 ;
+
+: else ( a -- )
+	immediate compile-only
+
+	>mark compile-jmp \ jump to then
+	swap >resolve ;
+
+: then ( a -- )
+	immediate compile-only
+
+	>resolve ;
+
 \ String literal
-: " clear-scan-buf [ next-char " compile ] scan-until-char scan-buf ;
+: "
+	immediate
+	clear-scan-buf [c] " scan-until-char scan-buf
+	state if compile then ;

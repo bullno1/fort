@@ -12,11 +12,24 @@ typedef union
 } fort_number_t;
 
 static fort_err_t
+fort_get_jmp_delta(fort_t* fort, fort_int_t* deltap)
+{
+	const fort_stack_frame_t* stack_frame = &fort->current_frame;
+	BK_ASSERT(stack_frame->pc != NULL, "Stackframe corrupted");
+	FORT_ASSERT(stack_frame->pc <= stack_frame->max_pc, FORT_ERR_OVERFLOW);
+	FORT_ASSERT(stack_frame->pc->type == FORT_INTEGER, FORT_ERR_OVERFLOW);
+	*deltap = stack_frame->pc->data.integer;
+
+	return FORT_OK;
+}
+
+static fort_err_t
 fort_jmp(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
+
 	fort_int_t delta;
-	FORT_ENSURE(fort_pop_integer(fort, &delta));
+	FORT_ENSURE(fort_get_jmp_delta(fort, &delta));
 
 	fort->current_frame.pc += delta;
 
@@ -28,13 +41,14 @@ fort_jmp0(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort_int_t delta;
-	FORT_ENSURE(fort_pop_integer(fort, &delta));
+	fort_int_t jmp_delta;
+	FORT_ENSURE(fort_get_jmp_delta(fort, &jmp_delta));
 
 	fort_int_t cond;
 	FORT_ENSURE(fort_pop_bool(fort, &cond));
 
-	if(!cond) { fort->current_frame.pc += delta; }
+	fort_int_t delta = cond ? 1 : jmp_delta;
+	fort->current_frame.pc += delta;
 
 	return FORT_OK;
 }

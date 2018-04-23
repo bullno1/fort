@@ -5,15 +5,15 @@
 BK_INLINE fort_err_t
 fort_exec_cell(fort_t* fort, fort_cell_t cell)
 {
-	fort_word_t* word;
 	switch(cell.type)
 	{
 		case FORT_XT:
-			word = cell.data.ref;
-			return word->code(fort, word);
+			{
+				fort_word_t* word = cell.data.ref;
+				return word->code(fort, word);
+			}
 		case FORT_TICK:
 			cell.type = FORT_XT;
-			word = cell.data.ref;
 			return fort_push(fort, cell);
 		default:
 			return fort_push(fort, cell);

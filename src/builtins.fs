@@ -51,8 +51,7 @@
 
 : >resolve ( a -- ) \ a = >mark'd location
 	dup here ( mark mark location )
-	swap - 2 - \ delta = length - mark - 2
-	( mark delta )
+	swap - ( mark delta )
 	current-word -rot word.at! ;
 
 : postpone immediate
@@ -70,18 +69,21 @@
 : if ( a -- )
 	immediate compile-only
 
-	>mark compile-jmp0 ;
+	compile-jmp0 >mark ;
 
 : else ( a -- )
 	immediate compile-only
 
-	>mark compile-jmp \ jump to then
+	compile-jmp >mark \ jump to then
 	swap >resolve ;
 
 : then ( a -- )
 	immediate compile-only
 
 	>resolve ;
+
+: recurse immediate compile-only
+	current-word compile ;
 
 \ String literal
 : "

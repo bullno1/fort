@@ -100,6 +100,9 @@ fort_err_t
 fort_stack_address(fort_t* fort, fort_int_t index, fort_cell_t** cellp);
 
 fort_err_t
+fort_stack_top(fort_t* fort, fort_cell_t** cellp);
+
+fort_err_t
 fort_as_word(fort_t* fort, fort_int_t index, fort_word_t** value);
 
 // dict

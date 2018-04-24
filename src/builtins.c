@@ -236,7 +236,7 @@ fort_quote(fort_t* fort, fort_word_t* word)
 	(void)word;
 
 	fort_cell_t* cell;
-	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	FORT_ENSURE(fort_stack_top(fort, &cell));
 
 	if(cell->type == FORT_XT) { cell->type = FORT_TICK; }
 
@@ -330,7 +330,7 @@ fort_compile(fort_t* fort, fort_word_t* word)
 
 	fort_cell_t* cell;
 	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_SYNTAX);
-	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	FORT_ENSURE(fort_stack_top(fort, &cell));
 	FORT_ENSURE(fort_push_word_data_internal(fort->ctx, fort->current_word, *cell));
 
 	return fort_ndrop(fort, 1);
@@ -342,7 +342,7 @@ fort_equal(fort_t* fort, fort_word_t* word)
 	(void)word;
 
 	fort_cell_t *lhs, *rhs;
-	FORT_ENSURE(fort_stack_address(fort, 0, &rhs));
+	FORT_ENSURE(fort_stack_top(fort, &rhs));
 	FORT_ENSURE(fort_stack_address(fort, 1, &lhs));
 	FORT_ENSURE(fort_push_integer(fort, lhs->type == rhs->type && lhs->data.ref == rhs->data.ref));
 	FORT_ENSURE(fort_move(fort, 0, 2));
@@ -409,7 +409,7 @@ fort_print(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 	fort_cell_t* cell;
-	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	FORT_ENSURE(fort_stack_top(fort, &cell));
 
 	fort_print_cell(fort, cell);
 
@@ -477,7 +477,7 @@ fort_swap(fort_t* fort, fort_word_t* word)
 	fort_cell_t *a, *b;
 	fort_cell_t tmp;
 
-	FORT_ENSURE(fort_stack_address(fort, 0, &b));
+	FORT_ENSURE(fort_stack_top(fort, &b));
 	FORT_ENSURE(fort_stack_address(fort, 1, &a));
 	tmp = *b;
 	*b = *a;

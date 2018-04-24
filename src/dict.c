@@ -212,7 +212,7 @@ FORT_DECL fort_err_t
 fort_set_word_data(fort_t* fort, fort_word_t* word, fort_int_t index)
 {
 	fort_cell_t* cell;
-	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	FORT_ENSURE(fort_stack_top(fort, &cell));
 
 	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 1, &word)); }
 
@@ -239,7 +239,7 @@ FORT_DECL fort_err_t
 fort_push_word_data(fort_t* fort, fort_word_t* word)
 {
 	fort_cell_t* cell;
-	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	FORT_ENSURE(fort_stack_top(fort, &cell));
 
 	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 1, &word)); }
 
@@ -289,7 +289,7 @@ FORT_DECL fort_err_t
 fort_set_word_name(fort_t* fort, fort_word_t* word)
 {
 	fort_cell_t* cell;
-	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	FORT_ENSURE(fort_stack_top(fort, &cell));
 	FORT_ASSERT(cell->type == FORT_STRING, FORT_ERR_TYPE);
 
 	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 1, &word)); }

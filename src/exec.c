@@ -60,7 +60,7 @@ fort_err_t
 fort_execute(fort_t* fort)
 {
 	fort_cell_t* cell;
-	FORT_ENSURE(fort_stack_address(fort, 0, &cell));
+	FORT_ENSURE(fort_stack_top(fort, &cell));
 	FORT_ASSERT(cell->type == FORT_XT, FORT_ERR_TYPE);
 
 	fort_word_t* word = cell->data.ref;

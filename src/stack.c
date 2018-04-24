@@ -22,6 +22,15 @@ fort_stack_address(fort_t* fort, fort_int_t index, fort_cell_t** cellp)
 }
 
 fort_err_t
+fort_stack_top(fort_t* fort, fort_cell_t** cellp)
+{
+	FORT_ASSERT(fort->sp > fort->sp_min, FORT_ERR_OVERFLOW);
+	*cellp = fort->sp - 1;
+
+	return FORT_OK;
+}
+
+fort_err_t
 fort_push(fort_t* fort, fort_cell_t value)
 {
 	FORT_ASSERT(fort->sp <= fort->sp_max, FORT_ERR_OVERFLOW);

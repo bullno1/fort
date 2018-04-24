@@ -137,7 +137,7 @@ fort_reset(fort_t* fort)
 	fort->fp = fort->fp_min;
 	bk_array_clear(fort->scan_buf);
 	fort->current_word = NULL;
-	fort->current_frame = (fort_stack_frame_t){ 0 };
+	*fort->fp = (fort_stack_frame_t){ 0 };
 	fort->state = FORT_STATE_INTERPRETING;
 
 	return FORT_OK;

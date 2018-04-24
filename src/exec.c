@@ -25,8 +25,9 @@ fort_exec_loop(fort_t* fort)
 {
 	for(;;)
 	{
-		const fort_cell_t* pc = fort->current_frame.pc++;
-		FORT_ASSERT(pc <= fort->current_frame.max_pc, FORT_ERR_OVERFLOW);
+		fort_stack_frame_t* current_frame = fort->fp;
+		const fort_cell_t* pc = current_frame->pc++;
+		FORT_ASSERT(pc <= current_frame->max_pc, FORT_ERR_OVERFLOW);
 		FORT_ENSURE(fort_exec_cell(fort, *pc));
 	}
 }
@@ -45,11 +46,12 @@ fort_enter_exec_loop(fort_t* fort)
 static fort_err_t
 fort_push_stack_frame(fort_t* fort, fort_word_t* word)
 {
-	FORT_ASSERT(fort->fp <= fort->fp_max, FORT_ERR_OVERFLOW);
-	*(fort->fp++) = fort->current_frame;
-	fort->current_frame.word = word;
-	fort->current_frame.pc = word->data;
-	fort->current_frame.max_pc = word->data + bk_array_len(word->data) - 1;
+	fort_stack_frame_t* new_frame = fort-> fp + 1;
+	FORT_ASSERT(new_frame <= fort->fp_max, FORT_ERR_OVERFLOW);
+	new_frame->word = word;
+	new_frame->pc = word->data;
+	new_frame->max_pc = word->data + bk_array_len(word->data) - 1;
+	fort->fp = new_frame;
 
 	return FORT_OK;
 }
@@ -64,7 +66,7 @@ fort_execute(fort_t* fort)
 	fort_word_t* word = cell->data.ref;
 	FORT_ENSURE(fort_push_stack_frame(fort, fort->ctx->switch_));
 	// Pin the word to the stack frame before popping to prevent GC
-	fort->current_frame.word = word;
+	fort->fp->word = word;
 	FORT_ENSURE(fort_ndrop(fort, 1));
 
 	FORT_ENSURE(word->code(fort, word));
@@ -101,7 +103,7 @@ fort_return(fort_t* fort, fort_word_t* word)
 
 	FORT_ASSERT(fort->fp > fort->fp_min, FORT_ERR_UNDERFLOW);
 
-	fort->current_frame = *(--fort->fp);
+	--fort->fp;
 
 	FORT_ASSERT(word->data != NULL && bk_array_len(word->data) >= 1, FORT_ERR_OVERFLOW);
 	return word->data[0].data.integer;

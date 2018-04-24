@@ -11,7 +11,8 @@ fort_get_stack_size(fort_t* fort)
 fort_err_t
 fort_stack_address(fort_t* fort, fort_int_t index, fort_cell_t** cellp)
 {
-	fort_cell_t* addr = index >= 0 ? fort->sp - index - 1 : fort->sp_min - index - 1;
+	fort_cell_t* origin = index >= 0 ? fort->sp : fort->sp_min;
+	fort_cell_t* addr = origin - index - 1;
 	FORT_ASSERT(fort->sp_min <= addr , FORT_ERR_UNDERFLOW);
 	FORT_ASSERT(addr < fort->sp, FORT_ERR_OVERFLOW);
 

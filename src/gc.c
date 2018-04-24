@@ -121,7 +121,6 @@ fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header)
 			fort_t* fort = BK_CONTAINER_OF(itr, fort_t, ctx_link);
 
 			fort_gc_visit_ptr(ctx, fort->current_word);
-			fort_gc_visit_ptr(ctx, (void*)fort->current_frame.word);
 
 			for(fort_cell_t* itr = fort->sp_min; itr <= fort->sp_max; ++itr)
 			{

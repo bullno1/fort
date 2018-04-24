@@ -82,7 +82,6 @@ struct fort_s
 	BK_ARRAY(char) scan_buf;
 	fort_word_t* current_word;
 	fort_input_state_t input_state;
-	fort_stack_frame_t current_frame;
 	fort_state_t state;
 	fort_int_t exec_loop_level;
 };

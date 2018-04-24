@@ -97,7 +97,7 @@ fort_exec_colon(fort_t* fort, fort_word_t* word)
 }
 
 fort_err_t
-fort_return(fort_t* fort, fort_word_t* word)
+fort_exit(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
@@ -105,6 +105,17 @@ fort_return(fort_t* fort, fort_word_t* word)
 
 	--fort->fp;
 
-	FORT_ASSERT(word->data != NULL && bk_array_len(word->data) >= 1, FORT_ERR_OVERFLOW);
-	return word->data[0].data.integer;
+	return FORT_OK;
+}
+
+fort_err_t
+fort_switch(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	FORT_ASSERT(fort->fp > fort->fp_min, FORT_ERR_UNDERFLOW);
+
+	--fort->fp;
+
+	return FORT_SWITCH;
 }

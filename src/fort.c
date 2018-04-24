@@ -17,31 +17,11 @@ fort_create_ctx(const fort_ctx_config_t* config, fort_ctx_t** ctxp)
 	ugc_init(&ctx->gc, &fort_gc_scan, fort_gc_release);
 	ctx->gc.userdata = ctx;
 
-	FORT_ENSURE(fort_begin_word(ctx, FORT_STRING_REF("exit"), fort_return, &ctx->exit));
-	FORT_ENSURE(
-		fort_push_word_data_internal(
-			ctx,
-			ctx->exit,
-			(fort_cell_t){
-				.type = FORT_INTEGER,
-				.data = { .integer = FORT_OK }
-			}
-		)
-	);
+	FORT_ENSURE(fort_begin_word(ctx, FORT_STRING_REF("exit"), &fort_exit, &ctx->exit));
 	FORT_ENSURE(fort_end_word(ctx, ctx->exit));
 
 	fort_word_t* switch_ = NULL;
-	FORT_ENSURE(fort_begin_word(ctx, FORT_STRING_REF("(switch)"), fort_return, &switch_));
-	FORT_ENSURE(
-		fort_push_word_data_internal(
-			ctx,
-			switch_,
-			(fort_cell_t){
-				.type = FORT_INTEGER,
-				.data = { .integer = FORT_SWITCH }
-			}
-		)
-	);
+	FORT_ENSURE(fort_begin_word(ctx, FORT_STRING_REF("(switch)"), &fort_switch, &switch_));
 
 	FORT_ENSURE(fort_begin_word(ctx, FORT_STRING_REF("switch"), fort_exec_colon, &ctx->switch_));
 	FORT_ENSURE(

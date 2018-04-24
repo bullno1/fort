@@ -135,7 +135,10 @@ fort_err_t
 fort_exec_colon(fort_t* fort, fort_word_t* word);
 
 fort_err_t
-fort_return(fort_t* fort, fort_word_t* word);
+fort_exit(fort_t* fort, fort_word_t* word);
+
+fort_err_t
+fort_switch(fort_t* fort, fort_word_t* word);
 
 // strpool
 

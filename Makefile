@@ -1,12 +1,17 @@
 .PHONY: test all clean src/builtins_fs.h
 
+ifeq ($(NDEBUG), 1)
+EXTRA_FLAGS= -O3 -DNDEBUG=1
+else
+EXTRA_FLAGS= -fsanitize=undefined -fsanitize=address
+endif
+
 CFLAGS += \
 		  -I include \
 		  -I deps/bk/include \
 		  -I deps \
 		  -g \
-		  -fsanitize=undefined \
-		  -fsanitize=address \
+		  $(EXTRA_FLAGS) \
 		  -std=c99 \
 		  -pedantic \
 		  -Wall \

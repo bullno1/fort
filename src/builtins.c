@@ -74,14 +74,14 @@ fort_numeric_2pop(
 	if(lhs_type == FORT_INTEGER && rhs_type == FORT_INTEGER)
 	{
 		*type = FORT_INTEGER;
-		FORT_ENSURE(fort_as_integer(fort, 0, &rhs->integer));
-		FORT_ENSURE(fort_as_integer(fort, 1, &lhs->integer));
+		fort_as_integer(fort, 0, &rhs->integer);
+		fort_as_integer(fort, 1, &lhs->integer);
 	}
 	else
 	{
 		*type = FORT_REAL;
-		FORT_ENSURE(fort_as_real(fort, 0, &rhs->real));
-		FORT_ENSURE(fort_as_real(fort, 1, &lhs->real));
+		fort_as_real(fort, 0, &rhs->real);
+		fort_as_real(fort, 1, &lhs->real);
 	}
 
 	return fort_ndrop(fort, 2);

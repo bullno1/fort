@@ -6,6 +6,16 @@
 #include <bk/dlist.h>
 #include "vendor/khash.h"
 
+#define FORT_NUMERIC_BIN_OPS(X) \
+	X(add, +) \
+	X(sub, -) \
+	X(mul, *) \
+	X(div, /) \
+	X(lt, <) \
+	X(gt, >) \
+	X(lte, <=) \
+	X(gte, >=)
+
 typedef struct fort_input_state_s fort_input_state_t;
 typedef struct fort_stack_frame_s fort_stack_frame_t;
 typedef struct fort_string_s fort_string_t;
@@ -50,11 +60,13 @@ struct fort_word_s
 	fort_int_t flags;
 	fort_native_fn_t code;
 	BK_ARRAY(fort_cell_t) data;
+	BK_ARRAY(uint8_t) opcodes;
 };
 
 struct fort_stack_frame_s
 {
 	const fort_word_t* word;
+	const fort_word_t* pinned_word;
 	const fort_cell_t* pc;
 	const fort_cell_t* max_pc;
 };
@@ -139,6 +151,9 @@ fort_exit(fort_t* fort, fort_word_t* word);
 
 fort_err_t
 fort_switch(fort_t* fort, fort_word_t* word);
+
+fort_err_t
+fort_compile_word(fort_ctx_t* ctx, fort_word_t* word);
 
 // strpool
 

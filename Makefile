@@ -1,7 +1,7 @@
 .PHONY: test all clean src/builtins_fs.h
 
 ifeq ($(NDEBUG), 1)
-EXTRA_FLAGS= -O3 -DNDEBUG=1
+EXTRA_FLAGS= -O3 -DNDEBUG=1 -flto
 else
 EXTRA_FLAGS= -fsanitize=undefined -fsanitize=address
 endif

@@ -34,6 +34,7 @@ fort_create_ctx(const fort_ctx_config_t* config, fort_ctx_t** ctxp)
 			}
 		)
 	);
+	FORT_ENSURE(fort_compile_word(ctx, ctx->switch_));
 
 	fort_reset_ctx(ctx);
 

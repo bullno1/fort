@@ -130,6 +130,7 @@ fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header)
 			for(fort_stack_frame_t* itr = fort->fp_min; itr <= fort->fp_max; ++itr)
 			{
 				fort_gc_visit_ptr(ctx, (void*)itr->word);
+				fort_gc_visit_ptr(ctx, (void*)itr->pinned_word);
 			}
 		}
 	}
@@ -164,6 +165,7 @@ fort_gc_release(ugc_t* gc, ugc_header_t* ugc_header)
 	{
 		fort_word_t* word = body;
 		if(word->data != NULL) { bk_array_destroy(word->data); }
+		if(word->opcodes != NULL) { bk_array_destroy(word->opcodes); }
 	}
 	else if(header->type == FORT_STRING)
 	{

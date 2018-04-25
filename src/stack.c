@@ -86,7 +86,7 @@ fort_push_string(fort_t* fort, fort_string_ref_t value)
 fort_err_t
 fort_ndrop(fort_t* fort, fort_int_t count)
 {
-	FORT_ASSERT(count >= 0, FORT_ERR_TYPE); // TODO: FORT_ERR_INVALID
+	FORT_ASSERT(count >= 0, FORT_ERR_INVALID);
 
 	fort_cell_t* new_sp = fort->sp - count;
 	FORT_ASSERT(fort->sp_min <= new_sp, FORT_ERR_UNDERFLOW);
@@ -146,7 +146,7 @@ fort_as_string(fort_t* fort, fort_int_t index, fort_string_ref_t* value)
 {
 	fort_cell_t* cell;
 	FORT_ENSURE(fort_stack_address(fort, index, &cell));
-	FORT_ASSERT(cell->type == FORT_STRING, FORT_ERR_TYPE);
+	FORT_ASSERT(cell->type == FORT_STRING, FORT_ERR_INVALID);
 
 	fort_string_t* string = cell->data.ref;
 	*value = (fort_string_ref_t){
@@ -172,7 +172,7 @@ fort_as_integer(fort_t* fort, fort_int_t index, fort_int_t* value)
 			*value = (fort_int_t)cell->data.integer;
 			return FORT_OK;
 		default:
-			return FORT_ERR_TYPE;
+			return FORT_ERR_INVALID;
 	}
 }
 
@@ -201,7 +201,7 @@ fort_as_real(fort_t* fort, fort_int_t index, fort_real_t* value)
 			*value = (fort_real_t)cell->data.integer;
 			return FORT_OK;
 		default:
-			return FORT_ERR_TYPE;
+			return FORT_ERR_INVALID;
 	}
 }
 
@@ -210,7 +210,7 @@ fort_as_word(fort_t* fort, fort_int_t index, fort_word_t** value)
 {
 	fort_cell_t* cell;
 	FORT_ENSURE(fort_stack_address(fort, index, &cell));
-	FORT_ASSERT(cell->type == FORT_XT, FORT_ERR_TYPE);
+	FORT_ASSERT(cell->type == FORT_XT, FORT_ERR_INVALID);
 
 	*value = cell->data.ref;
 
@@ -220,7 +220,7 @@ fort_as_word(fort_t* fort, fort_int_t index, fort_word_t** value)
 fort_err_t
 fort_xmove(fort_t* src_fort, fort_t* dst_fort, fort_int_t index)
 {
-	FORT_ASSERT(src_fort->ctx == dst_fort->ctx, FORT_ERR_TYPE);
+	FORT_ASSERT(src_fort->ctx == dst_fort->ctx, FORT_ERR_INVALID);
 
 	fort_cell_t* cell;
 	FORT_ENSURE(fort_stack_address(src_fort, index, &cell));

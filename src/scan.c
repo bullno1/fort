@@ -32,7 +32,7 @@ fort_parse_number(fort_string_ref_t string, fort_cell_t* value)
 	}
 
 	int convert_error = errno == ERANGE || end_ptr != string.ptr + string.length;
-	return convert_error ? FORT_ERR_TYPE : FORT_OK;
+	return convert_error ? FORT_ERR_INVALID : FORT_OK;
 }
 
 fort_err_t

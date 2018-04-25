@@ -290,7 +290,7 @@ fort_set_word_name(fort_t* fort, fort_word_t* word)
 {
 	fort_cell_t* cell;
 	FORT_ENSURE(fort_stack_top(fort, &cell));
-	FORT_ASSERT(cell->type == FORT_STRING, FORT_ERR_TYPE);
+	FORT_ASSERT(cell->type == FORT_STRING, FORT_ERR_INVALID);
 
 	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 1, &word)); }
 
@@ -343,7 +343,7 @@ fort_register_word(fort_t* fort, fort_word_t* word)
 {
 	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
 
-	FORT_ASSERT(word->name != NULL, FORT_ERR_TYPE); // TODO: FORT_ERR_INVALID
+	FORT_ASSERT(word->name != NULL, FORT_ERR_INVALID);
 
 	return FORT_OK;
 }

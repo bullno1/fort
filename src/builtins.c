@@ -69,7 +69,7 @@ fort_numeric_2pop(
 	FORT_ENSURE(fort_get_type(fort, 0, &rhs_type));
 	FORT_ENSURE(fort_get_type(fort, 1, &lhs_type));
 
-	FORT_ASSERT(fort_is_numeric(lhs_type) && fort_is_numeric(rhs_type), FORT_ERR_TYPE);
+	FORT_ASSERT(fort_is_numeric(lhs_type) && fort_is_numeric(rhs_type), FORT_ERR_INVALID);
 
 	if(lhs_type == FORT_INTEGER && rhs_type == FORT_INTEGER)
 	{
@@ -521,7 +521,7 @@ fort_current_word_set(fort_t* fort, fort_word_t* word)
 			FORT_ENSURE(fort_as_word(fort, 0, &fort->current_word));
 			break;
 		default:
-			return FORT_ERR_TYPE;
+			return FORT_ERR_INVALID;
 	}
 
 	return fort_ndrop(fort, 1);

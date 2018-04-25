@@ -110,8 +110,7 @@ fort_destroy(fort_t* fort)
 fort_err_t
 fort_reset(fort_t* fort)
 {
-	// TODO: Think of a more appropriate error type
-	FORT_ASSERT(fort->exec_loop_level == 0, FORT_ERR_TYPE);
+	FORT_ASSERT(fort->exec_loop_level == 0, FORT_ERR_INVALID);
 
 	fort->sp = fort->sp_min;
 	fort->fp = fort->fp_min;

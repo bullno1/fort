@@ -61,7 +61,7 @@ fort_execute(fort_t* fort)
 {
 	fort_cell_t* cell;
 	FORT_ENSURE(fort_stack_top(fort, &cell));
-	FORT_ASSERT(cell->type == FORT_XT, FORT_ERR_TYPE);
+	FORT_ASSERT(cell->type == FORT_XT, FORT_ERR_INVALID);
 
 	fort_word_t* word = cell->data.ref;
 	FORT_ENSURE(fort_push_stack_frame(fort, fort->ctx->switch_));

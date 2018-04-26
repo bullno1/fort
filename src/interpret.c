@@ -59,6 +59,7 @@ fort_compile_token(fort_t* fort, const fort_token_t* token)
 			)
 			{
 				// TODO: check whether it actually ends with exit
+				// TODO: add no-inline
 				size_t word_size = bk_array_len(word->data);
 				for(size_t i = 0; i < word_size - 1; ++i)
 				{

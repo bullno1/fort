@@ -288,5 +288,7 @@ fort_compile_word(fort_ctx_t* ctx, fort_word_t* word)
 		bk_array_push(word->opcodes, opcode);
 	}
 
+	// TODO: check for invalid jumps
+
 	return FORT_OK;
 }

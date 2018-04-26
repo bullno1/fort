@@ -8,6 +8,16 @@
 : \ immediate clear-scan-buf [ 10 compile ] scan-until-char ;
 : see ' word.inspect ;
 
+\ Arithmethic short hand
+
+: =0 0 = ;
+: <0 0 < ;
+: >0 0 > ;
+: <=0 0 <= ;
+: >=0 0 >= ;
+: +1 1 + ;
+: -1 1 - ;
+
 \ Stack manipulation
 : dup ( a -- a a )
 	0 pick ;
@@ -66,18 +76,21 @@
 : compile-jmp0
 	quote> (jmp0) compile ;
 
-: if ( a -- )
+: if ( interpret: a -- )
+     ( compile: -- mark )
 	immediate compile-only
 
 	compile-jmp0 >mark ;
 
-: else ( a -- )
+: else ( interpret:  -- )
+	   ( compile: mark1 -- mark2 )
 	immediate compile-only
 
 	compile-jmp >mark \ jump to then
 	swap >resolve ;
 
-: then ( a -- )
+: then ( interpret:  -- )
+	   ( compile: mark -- )
 	immediate compile-only
 
 	>resolve ;

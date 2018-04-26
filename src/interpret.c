@@ -53,7 +53,24 @@ fort_compile_token(fort_t* fort, const fort_token_t* token)
 				.type = FORT_XT,
 				.data = { .ref = word }
 			};
-			return fort_push_word_data_internal(fort->ctx, fort->current_word, cell);
+			if(word->code == fort_exec_colon
+				&& word->data != NULL
+				&& bk_array_len(word->data) <= 4
+			)
+			{
+				// TODO: check whether it actually ends with exit
+				size_t word_size = bk_array_len(word->data);
+				for(size_t i = 0; i < word_size - 1; ++i)
+				{
+					FORT_ENSURE(fort_push_word_data_internal(fort->ctx, fort->current_word, word->data[i]));
+				}
+
+				return FORT_OK;
+			}
+			else
+			{
+				return fort_push_word_data_internal(fort->ctx, fort->current_word, cell);
+			}
 		}
 	}
 }

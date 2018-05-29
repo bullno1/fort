@@ -121,6 +121,7 @@ struct fort_config_s
 {
 	struct bk_file_s* output;
 	size_t param_stack_size;
+	size_t local_stack_size;
 	size_t return_stack_size;
 };
 
@@ -210,6 +211,21 @@ fort_as_real(fort_t* fort, fort_int_t index, fort_real_t* value);
 
 FORT_DECL fort_err_t
 fort_as_bool(fort_t* fort, fort_int_t index, fort_int_t* value);
+
+/** @} */
+
+/** @defgroup local
+ *  @{
+ */
+
+FORT_DECL fort_err_t
+fort_declare_local(fort_t* fort, fort_int_t* id);
+
+FORT_DECL fort_err_t
+fort_set_local(fort_t* fort, fort_int_t id, fort_int_t index);
+
+FORT_DECL fort_err_t
+fort_get_local(fort_t* fort, fort_int_t id);
 
 /** @} */
 

@@ -25,6 +25,7 @@ fort_main(int argc, char* argv[])
 	fort_config_t cfg = {
 		.output = bk_stdout,
 		.param_stack_size = 1024,
+		.local_stack_size = 1024,
 		.return_stack_size = 1024
 	};
 

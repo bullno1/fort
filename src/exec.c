@@ -46,13 +46,18 @@ fort_enter_exec_loop(fort_t* fort)
 static fort_err_t
 fort_push_stack_frame(fort_t* fort, fort_word_t* word)
 {
-	fort_stack_frame_t* new_frame = fort-> fp + 1;
+	fort_stack_frame_t* old_frame = fort->fp;
+	fort_stack_frame_t* new_frame = old_frame + 1;
 	FORT_ASSERT(new_frame <= fort->fp_max, FORT_ERR_OVERFLOW);
+
 	new_frame->word = word;
 	new_frame->pc = word->data;
 	fort_int_t word_length = word->data ? bk_array_len(word->data) : 0;
 	FORT_ASSERT(word_length > 0, FORT_ERR_INVALID);
 	new_frame->max_pc = word->data + word_length - 1;
+
+	new_frame->local_base = new_frame->lp = old_frame->lp;
+
 	fort->fp = new_frame;
 
 	return FORT_OK;

@@ -38,6 +38,7 @@ setup_fixture(const MunitParameter params[], void* userdata)
 	fort_config_t fort_cfg = {
 		.output = bk_stdout,
 		.param_stack_size = 1024,
+		.local_stack_size = 1024,
 		.return_stack_size = 1024
 	};
 
@@ -73,6 +74,7 @@ setup_fort(const MunitParameter params[], void* userdata)
 	fort_config_t fort_cfg = {
 		.output = bk_stdout,
 		.param_stack_size = 1024,
+		.local_stack_size = 1024,
 		.return_stack_size = 1024
 	};
 	fort_ctx_t* ctx;

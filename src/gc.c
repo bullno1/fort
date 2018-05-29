@@ -122,12 +122,17 @@ fort_gc_scan(ugc_t* gc, ugc_header_t* ugc_header)
 
 			fort_gc_visit_ptr(ctx, fort->current_word);
 
-			for(fort_cell_t* itr = fort->sp_min; itr <= fort->sp_max; ++itr)
+			for(fort_cell_t* itr = fort->sp_min; itr < fort->sp; ++itr)
 			{
 				fort_gc_visit_cell(gc->userdata, *itr);
 			}
 
-			for(fort_stack_frame_t* itr = fort->fp_min; itr <= fort->fp_max; ++itr)
+			for(fort_cell_t* itr = fort->lp_min; itr < fort->fp->lp; ++itr)
+			{
+				fort_gc_visit_cell(gc->userdata, *itr);
+			}
+
+			for(fort_stack_frame_t* itr = fort->fp_min; itr <= fort->fp; ++itr)
 			{
 				fort_gc_visit_ptr(ctx, (void*)itr->word);
 			}

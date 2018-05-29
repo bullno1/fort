@@ -61,6 +61,8 @@ struct fort_stack_frame_s
 	const fort_word_t* word;
 	const fort_cell_t* pc;
 	const fort_cell_t* max_pc;
+	fort_cell_t* lp;
+	fort_cell_t* local_base;
 };
 
 struct fort_ctx_s
@@ -81,7 +83,7 @@ struct fort_s
 
 	fort_config_t config;
 	fort_ctx_t* ctx;
-	fort_cell_t *sp, *sp_min, *sp_max;
+	fort_cell_t *sp, *sp_min, *sp_max, *lp_min, *lp_max;
 	fort_stack_frame_t *fp, *fp_min, *fp_max;
 	BK_ARRAY(char) scan_buf;
 	fort_word_t* current_word;

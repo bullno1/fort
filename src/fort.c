@@ -59,6 +59,24 @@ fort_reset_ctx(fort_ctx_t* ctx)
 	fort_end_word(ctx, ctx->exit);
 }
 
+static fort_err_t
+fort_alloc_stack(
+	bk_allocator_t* allocator,
+	size_t cell_size,
+	size_t depth,
+	void** minp,
+	void** maxp
+)
+{
+	char* stack = bk_unsafe_malloc(allocator, cell_size * depth);
+	FORT_ASSERT(stack != NULL, FORT_ERR_OOM);
+
+	*minp = stack;
+	*maxp = stack + cell_size * (depth - 1);
+
+	return FORT_OK;
+}
+
 fort_err_t
 fort_create(fort_ctx_t* ctx, const fort_config_t* config, fort_t** fortp)
 {
@@ -74,21 +92,32 @@ fort_create(fort_ctx_t* ctx, const fort_config_t* config, fort_t** fortp)
 
 	// TODO: check stack size < INT_MAX
 
-	fort_cell_t* param_stack = bk_unsafe_malloc(
-		ctx->config.allocator,
-		sizeof(fort_cell_t) * config->param_stack_size
+	FORT_ENSURE(
+		fort_alloc_stack(
+			ctx->config.allocator,
+			sizeof(fort_cell_t),
+			config->param_stack_size,
+			(void**)&fort->sp_min, (void**)&fort->sp_max
+		)
 	);
-	FORT_ASSERT(param_stack != NULL, FORT_ERR_OOM);
-	fort->sp_min = param_stack;
-	fort->sp_max = param_stack + config->param_stack_size - 1;;
 
-	fort_stack_frame_t* return_stack = bk_unsafe_malloc(
-		ctx->config.allocator,
-		sizeof(fort_stack_frame_t) * config->return_stack_size
+	FORT_ENSURE(
+		fort_alloc_stack(
+			ctx->config.allocator,
+			sizeof(fort_cell_t),
+			config->local_stack_size,
+			(void**)&fort->lp_min, (void**)&fort->lp_max
+		)
 	);
-	FORT_ASSERT(return_stack != NULL, FORT_ERR_OOM);
-	fort->fp_min = return_stack;
-	fort->fp_max = return_stack + config->return_stack_size - 1;;
+
+	FORT_ENSURE(
+		fort_alloc_stack(
+			ctx->config.allocator,
+			sizeof(fort_stack_frame_t),
+			config->return_stack_size,
+			(void**)&fort->fp_min, (void**)&fort->fp_max
+		)
+	);
 
 	FORT_ENSURE(fort_reset(fort));
 	bk_dlist_append(&ctx->forts, &fort->ctx_link);
@@ -103,6 +132,7 @@ fort_destroy(fort_t* fort)
 	bk_dlist_unlink(&fort->ctx_link);
 	bk_array_destroy(fort->scan_buf);
 	bk_free(fort->ctx->config.allocator, fort->sp_min);
+	bk_free(fort->ctx->config.allocator, fort->lp_min);
 	bk_free(fort->ctx->config.allocator, fort->fp_min);
 	bk_free(fort->ctx->config.allocator, fort);
 }
@@ -116,7 +146,10 @@ fort_reset(fort_t* fort)
 	fort->fp = fort->fp_min;
 	bk_array_clear(fort->scan_buf);
 	fort->current_word = NULL;
-	*fort->fp = (fort_stack_frame_t){ 0 };
+	*fort->fp = (fort_stack_frame_t){
+		.local_base = fort->lp_min,
+		.lp = fort->lp_min
+	};
 	fort->state = FORT_STATE_INTERPRETING;
 
 	return FORT_OK;

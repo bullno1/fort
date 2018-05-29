@@ -135,6 +135,7 @@ FORT_NUMERIC_BIN_OPS(FORT_DEFINE_NUMERIC_BIN)
 
 FORT_INT_BIN_OPS(FORT_DEFINE_INT_BIN)
 
+// TODO: implement fort_not using fort_pop_boolean
 #define FORT_INT_UNARY_OPS(X) \
 	X(neg, -) \
 	X(not, !) \
@@ -480,6 +481,40 @@ fort_f_ndrop(fort_t* fort, fort_word_t* word)
 	return fort_ndrop(fort, n);
 }
 
+static fort_err_t
+fort_alloc_local(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_int_t local;
+	FORT_ENSURE(fort_declare_local(fort, &local));
+
+	return fort_push_integer(fort, local);
+}
+
+static fort_err_t
+fort_local_get(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_int_t local;
+	FORT_ENSURE(fort_pop_integer(fort, &local));
+
+	return fort_get_local(fort, local);
+}
+
+static fort_err_t
+fort_local_set(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_int_t local;
+	FORT_ENSURE(fort_as_integer(fort, 1, &local));
+	FORT_ENSURE(fort_set_local(fort, local, 0));
+
+	return fort_ndrop(fort, 2);
+}
+
 // Implement in C because this word is too common and `1 roll` is inefficient
 static fort_err_t
 fort_swap(fort_t* fort, fort_word_t* word)
@@ -747,6 +782,11 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(".s"), &fort_print_stack, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("reset"), &fort_f_reset, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("depth"), &fort_depth, 0));
+
+	// Local
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("alloc-local"), &fort_alloc_local, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("!"), &fort_local_set, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("@"), &fort_local_get, 0));
 
 	// Word manipulation
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.create"), &fort_word_create, 0));

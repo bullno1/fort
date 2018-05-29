@@ -135,6 +135,22 @@ FORT_NUMERIC_BIN_OPS(FORT_DEFINE_NUMERIC_BIN)
 
 FORT_INT_BIN_OPS(FORT_DEFINE_INT_BIN)
 
+#define FORT_INT_UNARY_OPS(X) \
+	X(neg, -) \
+	X(not, !) \
+	X(bneg, ~)
+
+#define FORT_DEFINE_INT_UNARY(NAME, OP) \
+	static fort_err_t \
+	fort_##NAME (fort_t* fort, fort_word_t* word) { \
+		(void)word; \
+		fort_int_t operand; \
+		FORT_ENSURE(fort_pop_integer(fort, &operand)); \
+		return fort_push_integer(fort, OP operand); \
+	}
+
+FORT_INT_UNARY_OPS(FORT_DEFINE_INT_UNARY)
+
 static fort_err_t
 fort_colon(fort_t* fort, fort_word_t* word)
 {
@@ -723,6 +739,12 @@ fort_load_builtins(fort_t* fort)
 
 	FORT_NUMERIC_BIN_OPS(FORT_REGISTER_BIN_OPS);
 	FORT_INT_BIN_OPS(FORT_REGISTER_BIN_OPS);
+
+#define FORT_REGISTER_UNARY_OPS(NAME, OP) \
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(#NAME), &fort_##NAME, 0));
+
+	FORT_INT_UNARY_OPS(FORT_REGISTER_UNARY_OPS);
+
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("="), &fort_equal, 0));
 
 	// Compilation

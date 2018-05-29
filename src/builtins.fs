@@ -1,5 +1,18 @@
 : nop ;
 
+: see ' word.inspect ;
+
+: dup 0 pick ;
+
+: drop 1 ndrop ;
+
+: immediate
+	current-word
+		dup word.flags 1 |
+		word.>flags drop ;
+
+' immediate 1 2 | word.>flags drop
+
 : [ immediate 0 state! ;
 
 : ] 1 state! ;
@@ -15,11 +28,14 @@
 	quote> exit word.push
 	word.register ;
 
+1 constant word.IMMEDIATE
+2 constant word.COMPILE-ONLY
+4 constant word.NO-INLINE
+
 : [c] immediate compile-only next-char compile ;
 
 : ( immediate clear-scan-buf [ next-char ) compile ] scan-until-char ;
 : \ immediate clear-scan-buf [ 10 compile ] scan-until-char ;
-: see ' word.inspect ;
 
 \ Arithmethic short hand
 
@@ -32,9 +48,6 @@
 : 1- 1 - ;
 
 \ Stack manipulation
-: dup ( a -- a a )
-	0 pick ;
-
 : over ( a b -- a b a )
 	1 pick ;
 
@@ -43,9 +56,6 @@
 
 : -rot ( a b c -- c a b )
 	rot rot ;
-
-: drop ( a a -- a )
-	1 ndrop ;
 
 : nip ( a b -- b )
 	swap drop ;

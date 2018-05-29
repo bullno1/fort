@@ -335,6 +335,8 @@ fort_set_word_flags(fort_t* fort, fort_word_t* word)
 	FORT_ENSURE(fort_as_integer(fort, 0, &flags));
 	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 1, &word)); }
 
+	word->flags = flags;
+
 	return fort_ndrop(fort, 1);
 }
 

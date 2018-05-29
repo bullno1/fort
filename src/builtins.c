@@ -689,6 +689,7 @@ fort_word_inspect(fort_t* fort, fort_word_t* word)
 	fort_print_string(output, inspected_word->name);
 	bk_printf(output, "\n");
 
+	bk_printf(output, "Address: %p\n", (void*)inspected_word);
 	bk_printf(output, "Flags: " FORT_INT_FMT "\n", inspected_word->flags);
 
 	bk_printf(output, "Code: 0x");

@@ -24,6 +24,24 @@ fort_interpret_token(fort_t* fort, const fort_token_t* token)
 	}
 }
 
+static char
+fort_is_inlinable(fort_t* fort, fort_word_t* word)
+{
+	if(word->code != fort_exec_colon) { return 0; }
+	if(word->data == NULL) { return 0; }
+
+	size_t length = bk_array_len(word->data);
+	if(!(0 < length && length <= FORT_INLINE_THRESHOLD)) { return 0; }
+
+	fort_cell_t* last_cell = &word->data[length - 1];
+	if(!(last_cell->type == FORT_XT && last_cell->data.ref == fort->ctx->exit))
+	{
+		return 0;
+	}
+
+	return 1;
+}
+
 static fort_err_t
 fort_compile_token(fort_t* fort, const fort_token_t* token)
 {
@@ -53,10 +71,8 @@ fort_compile_token(fort_t* fort, const fort_token_t* token)
 				.type = FORT_XT,
 				.data = { .ref = word }
 			};
-			if(word->code == fort_exec_colon
-				&& word->data != NULL
-				&& bk_array_len(word->data) <= 4
-			)
+
+			if(fort_is_inlinable(fort, word))
 			{
 				// TODO: check whether it actually ends with exit
 				// TODO: add no-inline

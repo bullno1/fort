@@ -6,6 +6,10 @@
 #include <bk/dlist.h>
 #include "vendor/khash.h"
 
+#ifndef FORT_INLINE_THRESHOLD
+#define FORT_INLINE_THRESHOLD 5
+#endif
+
 typedef struct fort_input_state_s fort_input_state_t;
 typedef struct fort_stack_frame_s fort_stack_frame_t;
 typedef struct fort_string_s fort_string_t;

@@ -261,10 +261,8 @@ fort_f_execute(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	fort_word_t* executed_word;
-	FORT_ENSURE(fort_as_word(fort, 0, &executed_word));
-
-	return executed_word->code(fort, executed_word);
+	// TODO: optimize using exit frame so that there is no extra C stack frame
+	return fort_execute(fort);
 }
 
 static fort_err_t

@@ -117,6 +117,19 @@
 
 	compile-jmp0 <resolve ;
 
+: while ( interpret: cond -- )
+        ( compile: mark -- mark mark )
+	immediate compile-only
+
+	postpone if swap ;
+
+: repeat ( interpret: -- )
+        ( compile: mark -- )
+	immediate compile-only
+
+	compile-jmp <resolve
+	postpone then ;
+
 \ Utils
 
 : . print drop ;

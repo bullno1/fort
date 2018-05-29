@@ -33,7 +33,7 @@ __KHASH_IMPL(
 	fort_cell_equal
 )
 
-static fort_err_t
+fort_err_t
 fort_push_word(fort_t* fort, fort_word_t* word)
 {
 	return fort_push(fort, (fort_cell_t){

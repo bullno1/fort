@@ -133,6 +133,9 @@ fort_begin_word(
 fort_err_t
 fort_end_word(fort_ctx_t* ctx, fort_word_t* word);
 
+fort_err_t
+fort_push_word(fort_t* fort, fort_word_t* word);
+
 // exec
 
 fort_err_t

@@ -647,6 +647,22 @@ fort_word_register(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
+fort_word_to_literal(fort_t* fort, fort_word_t* word)
+{
+	FORT_ENSURE(fort_as_word(fort, 0, &word));
+	word->code = fort_push_word;
+	return FORT_OK;
+}
+
+static fort_err_t
+fort_word_to_colon(fort_t* fort, fort_word_t* word)
+{
+	FORT_ENSURE(fort_as_word(fort, 0, &word));
+	word->code = fort_exec_colon;
+	return FORT_OK;
+}
+
+static fort_err_t
 fort_word_flag_get(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -700,19 +716,6 @@ fort_word_inspect(fort_t* fort, fort_word_t* word)
 	bk_printf(output, "\n");
 
 	return fort_ndrop(fort, 1);
-}
-
-static fort_err_t
-fort_word_code_set(fort_t* fort, fort_word_t* word)
-{
-	(void)word;
-
-	fort_word_t* code_word;
-	FORT_ENSURE(fort_as_word(fort, 0, &code_word));
-	fort_native_fn_t code = code_word->code;
-	FORT_ENSURE(fort_ndrop(fort, 1));
-
-	return fort_set_word_code(fort, NULL, code);
 }
 
 fort_err_t
@@ -775,7 +778,8 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.name"), &fort_word_name_get, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.>name"), &fort_word_name_set, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.register"), &fort_word_register, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.>code"), &fort_word_code_set, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.->colon"), &fort_word_to_colon, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.->literal"), &fort_word_to_literal, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.flags"), &fort_word_flag_get, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.>flags"), &fort_word_flag_set, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.inspect"), &fort_word_inspect, 0));

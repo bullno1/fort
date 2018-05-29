@@ -29,10 +29,10 @@
 
 : constant
 	word.create
+		word.->colon
 		next-token word.>name
-		quote> nop word.>code
-	swap word.push
-	quote> exit word.push
+		swap word.push
+		quote> exit word.push
 	word.register ;
 
 1 constant word.IMMEDIATE

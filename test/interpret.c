@@ -67,7 +67,7 @@ safe_exec(const MunitParameter params[], void* fixture_)
 		FORT_ERR_INVALID, ==,
 		fort_interpret_string(
 			fixture->fort1,
-			FORT_STRING_REF("word.create ' nop word.>code execute"),
+			FORT_STRING_REF("word.create word.->colon execute"),
 			FORT_STRING_REF(__FILE__)
 		)
 	);

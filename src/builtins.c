@@ -440,6 +440,14 @@ fort_f_reset(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
+fort_depth(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	return fort_push_integer(fort, fort_get_stack_size(fort));
+}
+
+static fort_err_t
 fort_f_pick(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -726,6 +734,7 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("."), &fort_print, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(".s"), &fort_print_stack, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("reset"), &fort_f_reset, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("depth"), &fort_depth, 0));
 
 	// Word manipulation
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("word.create"), &fort_word_create, 0));

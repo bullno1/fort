@@ -98,6 +98,25 @@
 : recurse immediate compile-only
 	current-word compile ;
 
+: <mark ( -- a ) \ a = current place in code
+	here ;
+
+: <resolve ( a -- ) \ a = <mark'd location
+
+	here - compile ;
+
+: begin ( interpret: -- )
+        ( compile: -- mark )
+	immediate compile-only
+
+	<mark ;
+
+: until ( interpret: cond -- )
+        ( compile: mark -- )
+	immediate compile-only
+
+	compile-jmp0 <resolve ;
+
 \ Utils
 
 : . print drop ;

@@ -212,17 +212,6 @@ fort_state_get(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
-fort_compile_only(fort_t* fort, fort_word_t* word)
-{
-	(void)word;
-
-	FORT_ASSERT(fort->current_word != NULL, FORT_ERR_NOT_FOUND);
-	fort->current_word->flags |= FORT_WORD_COMPILE_ONLY;
-
-	return FORT_OK;
-}
-
-static fort_err_t
 fort_tick(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -740,7 +729,6 @@ fort_load_builtins(fort_t* fort)
 	// Compilation
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("state"), &fort_state_get, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("state!"), &fort_state_set, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile-only"), &fort_compile_only, FORT_WORD_IMMEDIATE | FORT_WORD_COMPILE_ONLY));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile"), &fort_compile, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(":"), &fort_colon, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(";"), &fort_semicolon, FORT_WORD_IMMEDIATE | FORT_WORD_COMPILE_ONLY));

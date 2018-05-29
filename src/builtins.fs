@@ -6,10 +6,11 @@
 
 : drop 1 ndrop ;
 
-: immediate
-	current-word
-		dup word.flags 1 |
-		word.>flags drop ;
+: add-flag-to-current-word
+	current-word word.flags |
+	current-word swap word.>flags drop ;
+
+: immediate 1 add-flag-to-current-word ;
 
 ' immediate 1 2 | word.>flags drop
 
@@ -17,7 +18,13 @@
 
 : ] 1 state! ;
 
+: ( immediate clear-scan-buf [ next-char ) compile ] scan-until-char ;
+: \ immediate clear-scan-buf [ 10 compile ] scan-until-char ;
+
+\ We have can use comments now
+
 : quote> immediate
+	\ compile the next word in the input stream into the current word
 	' quote compile ;
 
 : constant
@@ -32,10 +39,11 @@
 2 constant word.COMPILE-ONLY
 4 constant word.NO-INLINE
 
-: [c] immediate compile-only next-char compile ;
+: compile-only word.COMPILE-ONLY add-flag-to-current-word ;
 
-: ( immediate clear-scan-buf [ next-char ) compile ] scan-until-char ;
-: \ immediate clear-scan-buf [ 10 compile ] scan-until-char ;
+' compile-only word.IMMEDIATE word.COMPILE-ONLY | word.>flags drop
+
+: [c] immediate compile-only next-char compile ;
 
 \ Arithmethic short hand
 

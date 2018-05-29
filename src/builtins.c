@@ -23,7 +23,7 @@ fort_get_jmp_delta(fort_t* fort, fort_int_t* deltap)
 	return FORT_OK;
 }
 
-fort_err_t
+static fort_err_t
 fort_jmp(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -36,7 +36,7 @@ fort_jmp(fort_t* fort, fort_word_t* word)
 	return FORT_OK;
 }
 
-fort_err_t
+static fort_err_t
 fort_jmp0(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -87,8 +87,18 @@ fort_numeric_2pop(
 	return fort_ndrop(fort, 2);
 }
 
+#define FORT_NUMERIC_BIN_OPS(X) \
+	X(add, +) \
+	X(sub, -) \
+	X(mul, *) \
+	X(div, /) \
+	X(lt, <) \
+	X(gt, >) \
+	X(lte, <=) \
+	X(gte, >=)
+
 #define FORT_DEFINE_NUMERIC_BIN(NAME, OP) \
-	fort_err_t \
+	static fort_err_t \
 	fort_##NAME (fort_t* fort, fort_word_t* word) { \
 		(void)word; \
 		fort_cell_type_t type; \
@@ -139,7 +149,6 @@ fort_semicolon(fort_t* fort, fort_word_t* word)
 			}
 		)
 	);
-	FORT_ENSURE(fort_compile_word(fort->ctx, fort->current_word));
 	FORT_ENSURE(fort_end_word(fort->ctx, fort->current_word));
 	fort->current_word = NULL;
 	fort->state = FORT_STATE_INTERPRETING;
@@ -430,7 +439,7 @@ fort_f_reset(fort_t* fort, fort_word_t* word)
 	return fort_reset(fort);
 }
 
-fort_err_t
+static fort_err_t
 fort_f_pick(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -440,7 +449,7 @@ fort_f_pick(fort_t* fort, fort_word_t* word)
 	return fort_pick(fort, n);
 }
 
-fort_err_t
+static fort_err_t
 fort_f_roll(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -450,7 +459,7 @@ fort_f_roll(fort_t* fort, fort_word_t* word)
 	return fort_roll(fort, n);
 }
 
-fort_err_t
+static fort_err_t
 fort_f_ndrop(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -461,7 +470,7 @@ fort_f_ndrop(fort_t* fort, fort_word_t* word)
 }
 
 // Implement in C because this word is too common and `1 roll` is inefficient
-fort_err_t
+static fort_err_t
 fort_swap(fort_t* fort, fort_word_t* word)
 {
 	(void)word;

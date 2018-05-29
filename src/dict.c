@@ -82,7 +82,6 @@ fort_begin_word(
 		));
 
 		current_word->data = NULL;
-		current_word->opcodes = NULL;
 	}
 
 	FORT_ENSURE(fort_strpool_alloc(ctx, name, &current_word->name));
@@ -179,7 +178,6 @@ fort_push_word_data_internal(
 	fort_ctx_t* ctx, fort_word_t* word, fort_cell_t cell
 )
 {
-	FORT_ASSERT(word->opcodes == NULL, FORT_ERR_INVALID); // Can't modify anymore
 	if(word->data == NULL)
 	{
 		word->data = bk_array_create(ctx->config.allocator, fort_cell_t, 1);
@@ -346,7 +344,6 @@ fort_register_word(fort_t* fort, fort_word_t* word)
 	if(word == NULL) { FORT_ENSURE(fort_as_word(fort, 0, &word)); }
 
 	FORT_ASSERT(word->name != NULL, FORT_ERR_INVALID);
-	// TODO: implement
 
 	return FORT_OK;
 }

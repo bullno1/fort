@@ -116,6 +116,25 @@ fort_numeric_2pop(
 
 FORT_NUMERIC_BIN_OPS(FORT_DEFINE_NUMERIC_BIN)
 
+#define FORT_INT_BIN_OPS(X) \
+	X(band, &) \
+	X(bor, |) \
+	X(bxor, ^) \
+	X(land, &&) \
+	X(lor, ||)
+
+#define FORT_DEFINE_INT_BIN(NAME, OP) \
+	static fort_err_t \
+	fort_##NAME (fort_t* fort, fort_word_t* word) { \
+		(void)word; \
+		fort_int_t lhs, rhs; \
+		FORT_ENSURE(fort_pop_integer(fort, &rhs)); \
+		FORT_ENSURE(fort_pop_integer(fort, &lhs)); \
+		return fort_push_integer(fort, lhs OP rhs); \
+	}
+
+FORT_INT_BIN_OPS(FORT_DEFINE_INT_BIN)
+
 static fort_err_t
 fort_colon(fort_t* fort, fort_word_t* word)
 {
@@ -699,10 +718,11 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(jmp0)"), &fort_jmp0, FORT_WORD_COMPILE_ONLY));
 
 	// Arithmetic
-#define FORT_REGISTER_NUMERIC_BIN_OPS(NAME, OP) \
+#define FORT_REGISTER_BIN_OPS(NAME, OP) \
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(#OP), &fort_##NAME, 0));
 
-	FORT_NUMERIC_BIN_OPS(FORT_REGISTER_NUMERIC_BIN_OPS);
+	FORT_NUMERIC_BIN_OPS(FORT_REGISTER_BIN_OPS);
+	FORT_INT_BIN_OPS(FORT_REGISTER_BIN_OPS);
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("="), &fort_equal, 0));
 
 	// Compilation

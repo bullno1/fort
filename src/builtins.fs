@@ -21,7 +21,7 @@
 : ( immediate clear-scan-buf [ next-char ) compile ] scan-until-char ;
 : \ immediate clear-scan-buf [ 10 compile ] scan-until-char ;
 
-\ We have can use comments now
+\ We can use comments now
 
 : quote> immediate
 	\ compile the next word in the input stream into the current word
@@ -42,6 +42,8 @@
 : compile-only word.COMPILE-ONLY add-flag-to-current-word ;
 
 ' compile-only word.IMMEDIATE word.COMPILE-ONLY | word.>flags drop
+
+: no-inline immediate compile-only word.NO-INLINE add-flag-to-current-word ;
 
 : [c] immediate compile-only next-char compile ;
 

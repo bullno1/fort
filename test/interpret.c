@@ -76,6 +76,19 @@ safe_exec(const MunitParameter params[], void* fixture_)
 }
 
 static MunitResult
+execute(const MunitParameter params[], void* fixture_)
+{
+	(void)params;
+	fixture_t* fixture = fixture_;
+
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "41 ' 1+ execute");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "41 : add  1 + ; ' add execute");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "41 : add  1 quote> + execute ; add");
+
+	return MUNIT_OK;
+}
+
+static MunitResult
 string(const MunitParameter params[], void* fixture_)
 {
 	(void)params;
@@ -129,6 +142,12 @@ static MunitTest tests[] = {
 	{
 		.name = "/arithmetic",
 		.test = arithmetic,
+		.setup = setup_fixture,
+		.tear_down = teardown_fixture
+	},
+	{
+		.name = "/execute",
+		.test = execute,
 		.setup = setup_fixture,
 		.tear_down = teardown_fixture
 	},

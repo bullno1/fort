@@ -219,6 +219,9 @@ fort_as_bool(fort_t* fort, fort_int_t index, fort_int_t* value);
  */
 
 FORT_DECL fort_err_t
+fort_with_stack_frame(fort_t* fort, fort_native_fn_t code);
+
+FORT_DECL fort_err_t
 fort_declare_local(fort_t* fort, fort_int_t* id);
 
 FORT_DECL fort_err_t

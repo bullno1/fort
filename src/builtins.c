@@ -413,7 +413,7 @@ fort_print(fort_t* fort, fort_word_t* word)
 
 	fort_print_cell(fort, cell);
 
-	return fort_ndrop(fort, 1);
+	return FORT_OK;
 }
 
 static fort_err_t
@@ -731,7 +731,7 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("ndrop"), &fort_f_ndrop, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("roll"), &fort_f_roll, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("swap"), &fort_swap, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("."), &fort_print, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("print"), &fort_print, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(".s"), &fort_print_stack, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("reset"), &fort_f_reset, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("depth"), &fort_depth, 0));

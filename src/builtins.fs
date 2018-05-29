@@ -98,6 +98,10 @@
 : recurse immediate compile-only
 	current-word compile ;
 
+\ Utils
+
+: . print drop ;
+
 \ String literal
 : "
 	immediate

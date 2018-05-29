@@ -760,7 +760,6 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("current-word"), &fort_current_word_get, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("current-word!"), &fort_current_word_set, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("quote"), &fort_quote, 0));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("(exec-colon)"), &fort_exec_colon, 0));
 
 	// Scanner
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("scan-until-char"), &fort_scan_until_char, 0));

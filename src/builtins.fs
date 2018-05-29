@@ -1,6 +1,19 @@
+: nop ;
+
 : [ immediate 0 state! ;
 
 : ] 1 state! ;
+
+: quote> immediate
+	' quote compile ;
+
+: constant
+	word.create
+		next-token word.>name
+		quote> nop word.>code
+	swap word.push
+	quote> exit word.push
+	word.register ;
 
 : [c] immediate compile-only next-char compile ;
 
@@ -66,9 +79,6 @@
 
 : postpone immediate
 	' compile ;
-
-: quote> immediate
-	' quote compile ;
 
 : compile-jmp
 	quote> (jmp) compile ;

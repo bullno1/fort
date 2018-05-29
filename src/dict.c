@@ -345,5 +345,5 @@ fort_register_word(fort_t* fort, fort_word_t* word)
 
 	FORT_ASSERT(word->name != NULL, FORT_ERR_INVALID);
 
-	return FORT_OK;
+	return fort_end_word(fort->ctx, word);
 }

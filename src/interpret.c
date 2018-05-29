@@ -73,6 +73,7 @@ fort_compile_token(fort_t* fort, const fort_token_t* token)
 				.data = { .ref = word }
 			};
 
+			// TODO: refactor to use fort_compile_internal
 			if(fort_is_inlinable(fort, word))
 			{
 				size_t word_size = bk_array_len(word->data);

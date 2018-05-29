@@ -350,6 +350,7 @@ fort_get_next_token(fort_t* fort, fort_word_t* word)
 static fort_err_t
 fort_compile(fort_t* fort, fort_word_t* word)
 {
+	// TODO: refactor to use fort_compile_internal
 	(void)word;
 
 	fort_cell_t* cell;

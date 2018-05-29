@@ -167,10 +167,7 @@ fort_find(fort_t* fort, fort_string_ref_t name)
 {
 	fort_word_t* word = fort_find_internal(fort->ctx, name);
 	FORT_ASSERT(word != NULL, FORT_ERR_NOT_FOUND);
-	return fort_push(fort, (fort_cell_t){
-		.type = FORT_XT,
-		.data = { .ref = word }
-	});
+	return fort_push_word(fort, word);
 }
 
 fort_err_t

@@ -212,35 +212,15 @@ fort_state_get(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
-fort_tick(fort_t* fort, fort_word_t* word)
+fort_f_find(fort_t* fort, fort_word_t* word)
 {
-	(void)word;
+	fort_string_ref_t name;
+	FORT_ENSURE(fort_as_string(fort, 0, &name));
+	word = fort_find_internal(fort->ctx, name);
+	FORT_ASSERT(word != NULL, FORT_ERR_NOT_FOUND);
+	FORT_ENSURE(fort_ndrop(fort, 1));
 
-	fort_token_t token;
-	fort_err_t err = fort_next_token(fort, &token);
-	FORT_ASSERT(err != FORT_ERR_NOT_FOUND, FORT_ERR_SYNTAX);
-	FORT_ASSERT(err == FORT_OK, err);
-
-	fort_word_t* ticked_word = fort_find_internal(fort->ctx, token.lexeme);
-	if(ticked_word == NULL)
-	{
-		fort_cell_t value;
-		if(fort_parse_number(token.lexeme, &value) != FORT_OK)
-		{
-			return FORT_ERR_NOT_FOUND;
-		}
-		else
-		{
-			return fort_push(fort, value);
-		}
-	}
-	else
-	{
-		return fort_push(fort, (fort_cell_t){
-			.type = FORT_XT,
-			.data = { .ref = ticked_word }
-		});
-	}
+	return fort_push_word(fort, word);
 }
 
 static fort_err_t
@@ -745,7 +725,7 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("compile"), &fort_compile, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(":"), &fort_colon, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF(";"), &fort_semicolon, FORT_WORD_IMMEDIATE | FORT_WORD_COMPILE_ONLY));
-	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("'"), &fort_tick, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("find"), &fort_f_find, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("current-word"), &fort_current_word_get, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("current-word!"), &fort_current_word_set, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("quote"), &fort_quote, 0));

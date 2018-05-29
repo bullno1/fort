@@ -1,7 +1,5 @@
 : nop ;
 
-: see ' word.inspect ;
-
 : dup 0 pick ;
 
 : drop 1 ndrop ;
@@ -11,6 +9,8 @@
 	current-word swap word.>flags drop ;
 
 : immediate 1 add-flag-to-current-word ;
+
+: ' next-token find ;
 
 ' immediate 1 2 | word.>flags drop
 
@@ -83,6 +83,8 @@
 
 : word.flags! ( word flags -- )
 	word.>flags drop ;
+
+: see ' word.inspect ;
 
 \ Flow control
 

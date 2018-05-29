@@ -81,9 +81,13 @@ execute(const MunitParameter params[], void* fixture_)
 	(void)params;
 	fixture_t* fixture = fixture_;
 
-	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "41 ' 1+ execute");
-	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "41 : add  1 + ; ' add execute");
-	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "41 : add  1 quote> + execute ; add");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42 3", "41 ' 1+ execute 3");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42 3", "41 : add  1 + ; ' add execute 3");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42 3", "41 : add  1 quote> + execute ; add 3");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42 3", "41 : add  1 quote> + execute 3 ; ' add execute");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42 3", "41 : add no-inline 1 quote> + execute 3 ; : add2 add ; add2");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42 3", "41 : add no-inline 1 quote> + execute 3 ; : add2 add ; ' add2 execute");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42 3", "41 : add no-inline 1 quote> + execute 3 ; : add2 quote> add quote> execute execute ; ' add2 execute");
 
 	return MUNIT_OK;
 }

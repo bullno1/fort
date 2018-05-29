@@ -84,7 +84,8 @@ BK_ENUM(fort_state_t, FORT_STATE)
 typedef enum fort_word_flag_e
 {
 	FORT_WORD_IMMEDIATE = 1 << 0,
-	FORT_WORD_COMPILE_ONLY = 1 << 1
+	FORT_WORD_COMPILE_ONLY = 1 << 1,
+	FORT_WORD_NO_INLINE = 1 << 2,
 } fort_word_flag_t;
 
 struct fort_location_s

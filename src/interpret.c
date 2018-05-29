@@ -27,6 +27,7 @@ fort_interpret_token(fort_t* fort, const fort_token_t* token)
 static char
 fort_is_inlinable(fort_t* fort, fort_word_t* word)
 {
+	if(word->flags & FORT_WORD_NO_INLINE) { return 0; }
 	if(word->code != fort_exec_colon) { return 0; }
 	if(word->data == NULL) { return 0; }
 
@@ -74,8 +75,6 @@ fort_compile_token(fort_t* fort, const fort_token_t* token)
 
 			if(fort_is_inlinable(fort, word))
 			{
-				// TODO: check whether it actually ends with exit
-				// TODO: add no-inline
 				size_t word_size = bk_array_len(word->data);
 				for(size_t i = 0; i < word_size - 1; ++i)
 				{

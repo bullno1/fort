@@ -50,7 +50,9 @@ fort_push_stack_frame(fort_t* fort, fort_word_t* word)
 	FORT_ASSERT(new_frame <= fort->fp_max, FORT_ERR_OVERFLOW);
 	new_frame->word = word;
 	new_frame->pc = word->data;
-	new_frame->max_pc = word->data + bk_array_len(word->data) - 1;
+	fort_int_t word_length = word->data ? bk_array_len(word->data) : 0;
+	FORT_ASSERT(word_length > 0, FORT_ERR_INVALID);
+	new_frame->max_pc = word->data + word_length - 1;
 	fort->fp = new_frame;
 
 	return FORT_OK;
@@ -84,7 +86,7 @@ fort_exec_colon(fort_t* fort, fort_word_t* word)
 		FORT_ENSURE(fort_push_stack_frame(fort, fort->ctx->switch_));
 	}
 
-	fort_push_stack_frame(fort, word);
+	FORT_ENSURE(fort_push_stack_frame(fort, word));
 
 	if(exec_loop_level == 0)
 	{

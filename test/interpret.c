@@ -57,6 +57,25 @@ arithmetic(const MunitParameter params[], void* fixture_)
 }
 
 static MunitResult
+safe_exec(const MunitParameter params[], void* fixture_)
+{
+	(void)params;
+	fixture_t* fixture = fixture_;
+
+	munit_assert_enum(
+		fort_err_t,
+		FORT_ERR_INVALID, ==,
+		fort_interpret_string(
+			fixture->fort1,
+			FORT_STRING_REF("word.create ' nop word.>code execute"),
+			FORT_STRING_REF(__FILE__)
+		)
+	);
+
+	return MUNIT_OK;
+}
+
+static MunitResult
 string(const MunitParameter params[], void* fixture_)
 {
 	(void)params;
@@ -110,6 +129,12 @@ static MunitTest tests[] = {
 	{
 		.name = "/arithmetic",
 		.test = arithmetic,
+		.setup = setup_fixture,
+		.tear_down = teardown_fixture
+	},
+	{
+		.name = "/safe_exec",
+		.test = safe_exec,
 		.setup = setup_fixture,
 		.tear_down = teardown_fixture
 	},

@@ -257,6 +257,17 @@ fort_quote(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
+fort_f_execute(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_word_t* executed_word;
+	FORT_ENSURE(fort_as_word(fort, 0, &executed_word));
+
+	return executed_word->code(fort, executed_word);
+}
+
+static fort_err_t
 fort_scan_buf(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -736,6 +747,7 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("current-word"), &fort_current_word_get, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("current-word!"), &fort_current_word_set, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("quote"), &fort_quote, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("execute"), &fort_f_execute, 0));
 
 	// Scanner
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("scan-until-char"), &fort_scan_until_char, 0));

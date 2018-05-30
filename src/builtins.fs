@@ -38,6 +38,7 @@
 1 constant word.IMMEDIATE
 2 constant word.COMPILE-ONLY
 4 constant word.NO-INLINE
+10 constant CR
 
 : compile-only word.COMPILE-ONLY add-flag-to-current-word ;
 
@@ -165,6 +166,19 @@
 \ Utils
 
 : . print drop ;
+
+\ Alt syntax
+
+: constant:
+	next-token
+	clear-scan-buf CR scan-until-char scan-buf eval
+
+	word.create ( const-name value word )
+		word.->colon
+		swap word.push
+		swap word.>name
+		quote> exit word.push
+	word.register ;
 
 \ String literal
 : "

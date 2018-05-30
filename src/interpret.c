@@ -124,17 +124,25 @@ fort_err_t
 fort_interpret(fort_t* fort, struct bk_file_s* in, fort_string_ref_t filename)
 {
 	(void)filename;
-	fort_state_t state = fort->state;
 
+	// TODO: store all interpreter state in fort_interpreter_state_t structure
+	fort_state_t state = fort->state;
+	fort_input_state_t input_state = fort->input_state;
+	fort_int_t exec_loop_level = fort->exec_loop_level;
+
+	fort->state = FORT_STATE_INTERPRETING;
 	fort->input_state = (fort_input_state_t) {
 		.input = in,
 		.location = { .line = 1, .column = 0 },
 	};
-	fort->state = FORT_STATE_INTERPRETING;
+	fort->exec_loop_level = 0;
 
 	fort_err_t err = fort_outer_interpret(fort);
 
 	fort->state = state;
+	fort->input_state = input_state;
+	fort->exec_loop_level = exec_loop_level;
+
 	return err;
 }
 

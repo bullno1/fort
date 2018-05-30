@@ -64,6 +64,16 @@ fort_push_stack_frame(fort_t* fort, fort_word_t* word)
 }
 
 static inline fort_err_t
+fort_pop_stack_frame(fort_t* fort)
+{
+	FORT_ASSERT(fort->fp > fort->fp_min, FORT_ERR_UNDERFLOW);
+
+	--fort->fp;
+
+	return FORT_OK;
+}
+
+static inline fort_err_t
 fort_exec_trampoline(
 	fort_t* fort,
 	fort_word_t* word,
@@ -161,11 +171,7 @@ fort_exit(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	FORT_ASSERT(fort->fp > fort->fp_min, FORT_ERR_UNDERFLOW);
-
-	--fort->fp;
-
-	return FORT_OK;
+	return fort_pop_stack_frame(fort);
 }
 
 fort_err_t
@@ -173,9 +179,12 @@ fort_switch(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	FORT_ASSERT(fort->fp > fort->fp_min, FORT_ERR_UNDERFLOW);
-
-	--fort->fp;
-
+	FORT_ENSURE(fort_pop_stack_frame(fort));
 	return FORT_SWITCH;
+}
+
+fort_err_t
+fort_with_stack_frame(fort_t* fort, fort_word_t* word, fort_native_fn_t code)
+{
+	return fort_exec_trampoline(fort, word, 1, code);
 }

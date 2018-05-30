@@ -93,6 +93,22 @@ execute(const MunitParameter params[], void* fixture_)
 }
 
 static MunitResult
+eval(const MunitParameter params[], void* fixture_)
+{
+	(void)params;
+	fixture_t* fixture = fixture_;
+
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", "\" 42\" eval");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", ": hipster+ \" 1 + \" eval ; 41 hipster+");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", ": hipster+ \" 1 + \" eval ; 41 \" ' hipster+ execute\" eval");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", ": hipster+ \" 1 + \" eval ; : hipster+2 \" ' hipster+\" eval execute ; 41 hipster+2");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", ": hipster+ \" 1 + \" eval ; : hipster+2 \" ' hipster+ execute\" eval ; 41 hipster+2");
+	fort_assert_same_stack_effect(fixture->fort1, fixture->fort2, "42", ": hipster+ \" 1 + \" eval ; : hipster+2 \" ' hipster+ execute\" eval ; 41 \" ' hipster+2  execute \" eval");
+
+	return MUNIT_OK;
+}
+
+static MunitResult
 string(const MunitParameter params[], void* fixture_)
 {
 	(void)params;
@@ -152,6 +168,12 @@ static MunitTest tests[] = {
 	{
 		.name = "/execute",
 		.test = execute,
+		.setup = setup_fixture,
+		.tear_down = teardown_fixture
+	},
+	{
+		.name = "/eval",
+		.test = eval,
 		.setup = setup_fixture,
 		.tear_down = teardown_fixture
 	},

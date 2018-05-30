@@ -246,6 +246,29 @@ fort_f_execute(fort_t* fort, fort_word_t* word)
 }
 
 static fort_err_t
+fort_eval_internal(fort_t* fort, fort_word_t* word)
+{
+	(void)word;
+
+	fort_string_ref_t eval_str;
+	FORT_ENSURE(fort_as_string(fort, 0, &eval_str));
+
+	// Move string to local var to prevent GC
+	fort_int_t local;
+	FORT_ENSURE(fort_declare_local(fort, &local));
+	FORT_ENSURE(fort_set_local(fort, local, 0));
+	FORT_ENSURE(fort_ndrop(fort, 1));
+
+	return fort_interpret_string(fort, eval_str, FORT_STRING_REF("eval"));
+}
+
+static fort_err_t
+fort_eval(fort_t* fort, fort_word_t* word)
+{
+	return fort_with_stack_frame(fort, word, fort_eval_internal);
+}
+
+static fort_err_t
 fort_scan_buf(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
@@ -764,6 +787,7 @@ fort_load_builtins(fort_t* fort)
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("current-word!"), &fort_current_word_set, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("quote"), &fort_quote, 0));
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("execute"), &fort_f_execute, 0));
+	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("eval"), &fort_eval, 0));
 
 	// Scanner
 	FORT_ENSURE(fort_create_word(fort->ctx, FORT_STRING_REF("scan-until-char"), &fort_scan_until_char, 0));

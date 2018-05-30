@@ -76,7 +76,12 @@ fort_execute(fort_t* fort)
 	fort->fp->word = word;
 	FORT_ENSURE(fort_ndrop(fort, 1));
 
-	FORT_ENSURE(word->code(fort, word));
+	// Temporarily bump exec_loop_level to prevent fort_exec_colon from creating
+	// another switch frame
+	++fort->exec_loop_level;
+	fort_err_t err = word->code(fort, word);
+	--fort->exec_loop_level;
+	if(err != FORT_OK) { return err; }
 
 	return fort_enter_exec_loop(fort);
 }

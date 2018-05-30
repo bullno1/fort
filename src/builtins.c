@@ -153,14 +153,19 @@ FORT_INT_BIN_OPS(FORT_DEFINE_INT_BIN)
 FORT_INT_UNARY_OPS(FORT_DEFINE_INT_UNARY)
 
 static fort_err_t
+fort_expect_next_token(fort_t* fort, fort_token_t* tokenp)
+{
+	fort_err_t err = fort_next_token(fort, tokenp);
+	return err == FORT_ERR_NOT_FOUND ? FORT_ERR_SYNTAX : err;
+}
+
+static fort_err_t
 fort_colon(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
 	fort_token_t name;
-	fort_err_t err = fort_next_token(fort, &name);
-	FORT_ASSERT(err != FORT_ERR_NOT_FOUND, FORT_ERR_SYNTAX);
-	FORT_ASSERT(err == FORT_OK, err);
+	FORT_ENSURE(fort_expect_next_token(fort, &name));
 
 	fort->state = FORT_STATE_COMPILING;
 
@@ -343,7 +348,7 @@ fort_get_next_token(fort_t* fort, fort_word_t* word)
 	(void)word;
 
 	fort_token_t token;
-	FORT_ENSURE(fort_next_token(fort, &token));
+	FORT_ENSURE(fort_expect_next_token(fort, &token));
 
 	return fort_push_string(fort, token.lexeme);
 }

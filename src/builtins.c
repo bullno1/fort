@@ -242,8 +242,7 @@ fort_f_execute(fort_t* fort, fort_word_t* word)
 {
 	(void)word;
 
-	// TODO: optimize using exit frame so that there is no extra C stack frame
-	return fort_execute(fort);
+	return fort_execute_internal(fort);
 }
 
 static fort_err_t

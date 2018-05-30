@@ -149,6 +149,9 @@ fort_exit(fort_t* fort, fort_word_t* word);
 fort_err_t
 fort_switch(fort_t* fort, fort_word_t* word);
 
+fort_err_t
+fort_execute_internal(fort_t* fort);
+
 // strpool
 
 fort_err_t
